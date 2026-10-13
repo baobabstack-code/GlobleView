@@ -27,11 +27,7 @@ import {
 } from './scopeMask.js';
 import { KEYHOLE_OUTER_RADIUS } from './celestialRing.js';
 
-// The mask ships off (SCOPE_ENABLED_DEFAULT); these tests exercise it on.
-beforeEach(() => {
-  _resetScopeMaskForTest();
-  setScopeMaskEnabled(true);
-});
+beforeEach(() => _resetScopeMaskForTest());
 
 test('geometry anchors the visible edge to the shared keyhole radius', () => {
   const geo = scopeMaskGeometry(1440, 860, 0.4);
