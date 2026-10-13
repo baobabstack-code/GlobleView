@@ -21,7 +21,6 @@ services:
     plan: free
     buildCommand: npm ci && npm run build
     startCommand: npx vite preview --host 0.0.0.0 --port $PORT
-    healthCheckPath: /
     envVars:
       # package.json engines: >=24.14.0 <25 || >=26 <27
       - key: NODE_VERSION
