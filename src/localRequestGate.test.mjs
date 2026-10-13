@@ -105,3 +105,53 @@ test('a missing Host with a present Origin is refused (no authority to match)', 
 test('a foreign Host is refused when an Origin is present', () => {
   assert.equal(admitSameSiteRequest({ ...same, hostHeader: 'evil.example:4173' }).ok, false, 'foreign Host does not match local Origin');
 });
+
+const hosted = {
+  hostHeader: 'globe.example.com',
+  protocol: 'http:',
+  origin: 'https://globe.example.com',
+  secFetchSite: 'same-origin',
+  proxyHeaders: {
+    'x-forwarded-for': '203.0.113.7',
+    'x-forwarded-proto': 'https',
+  },
+};
+
+test('proxy headers are still refused without the trustProxy opt-in', () => {
+  const verdict = admitSameSiteRequest(hosted);
+  assert.equal(verdict.ok, false);
+  assert.equal(verdict.error, 'Proxied requests are not accepted');
+});
+
+test('trustProxy admits a same-origin request behind a TLS-terminating proxy', () => {
+  assert.equal(admitSameSiteRequest({ ...hosted, trustProxy: true }).ok, true);
+});
+
+test('trustProxy still refuses cross-site and cross-origin requests', () => {
+  assert.equal(
+    admitSameSiteRequest({
+      ...hosted,
+      trustProxy: true,
+      secFetchSite: 'cross-site',
+    }).ok,
+    false,
+  );
+  assert.equal(
+    admitSameSiteRequest({
+      ...hosted,
+      trustProxy: true,
+      origin: 'https://evil.example',
+    }).ok,
+    false,
+  );
+});
+
+test('trustProxy without X-Forwarded-Proto keeps the socket scheme', () => {
+  const verdict = admitSameSiteRequest({
+    ...hosted,
+    trustProxy: true,
+    proxyHeaders: { 'x-forwarded-for': '203.0.113.7' },
+  });
+  assert.equal(verdict.ok, false);
+  assert.equal(verdict.error, 'Cross-origin requests are not accepted');
+});

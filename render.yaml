@@ -29,6 +29,11 @@ services:
       # e.g. gods-eye-view-i9hi.onrender.com,globe.example.com
       - key: GEV_ALLOWED_HOSTS
         value: gods-eye-view-i9hi.onrender.com
+      # Render's load balancer adds X-Forwarded-* to every request; without this
+      # the same-site gate refuses Mapillary tiles, Google Places and OpenAI.
+      # The credential panel and /mcp stay loopback-only regardless.
+      - key: GEV_TRUST_PROXY
+        value: '1'
       - key: GEV_RATELIMIT_GOOGLE_PER_MIN
         value: '60'
       - key: GEV_RATELIMIT_OPENAI_PER_MIN

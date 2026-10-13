@@ -19,6 +19,7 @@ export function admitSameSite(req, res) {
     origin: req.headers?.origin,
     secFetchSite: req.headers?.['sec-fetch-site'],
     proxyHeaders: req.headers || {},
+    trustProxy: process.env.GEV_TRUST_PROXY === '1',
   });
   if (verdict.ok) return false;
   res.statusCode = verdict.status;

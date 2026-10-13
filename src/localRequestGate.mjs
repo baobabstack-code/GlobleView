@@ -87,7 +87,12 @@ function requestAuthority(hostHeader, protocol) {
  *  4. otherwise ok. Non-browser loopback tools and the LAN opt-in (which may
  *     carry neither `Origin` nor `Sec-Fetch-Site`) pass here.
  *
- * @param {{hostHeader?: string, protocol?: string, origin?: string, secFetchSite?: string, proxyHeaders?: Record<string,string>}} req
+ * `trustProxy` (the `GEV_TRUST_PROXY=1` hosted opt-in, for a server that only
+ * receives traffic through its own reverse proxy) skips (1) and takes the
+ * scheme from `X-Forwarded-Proto`, since TLS ends at the proxy; (2) and (3)
+ * still apply. It never reaches the credential panel or /mcp gates.
+ *
+ * @param {{hostHeader?: string, protocol?: string, origin?: string, secFetchSite?: string, proxyHeaders?: Record<string,string>, trustProxy?: boolean}} req
  * @returns {{ok: true} | {ok: false, status: 403, error: string}}
  */
 export function admitSameSiteRequest({
@@ -96,10 +101,19 @@ export function admitSameSiteRequest({
   origin,
   secFetchSite,
   proxyHeaders = {},
+  trustProxy = false,
 } = {}) {
+  if (trustProxy) {
+    const forwardedProto = String(proxyHeaders['x-forwarded-proto'] || '')
+      .split(',')[0]
+      .trim()
+      .toLowerCase();
+    if (forwardedProto === 'https' || forwardedProto === 'http')
+      protocol = `${forwardedProto}:`;
+  }
   // (1) A request carrying reverse-proxy / CDN forwarding headers did not
   // originate on this machine, whatever its socket says.
-  if (hasProxySignals(proxyHeaders)) {
+  if (!trustProxy && hasProxySignals(proxyHeaders)) {
     return {
       ok: false,
       status: 403,
