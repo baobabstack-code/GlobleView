@@ -1,0 +1,65 @@
+# Render Blueprint — hosts the full app (browser bundle + /api provider proxies)
+# on one Node web service via `vite preview`. Static hosts such as Vercel serve
+# only the bundle, so every /api route (ships, fires, traffic, voice, Places,
+# Overpass) is missing there.
+#
+# Secrets use `sync: false`: Render prompts for them when the Blueprint is
+# first applied and never reads them from this file. Leave any you don't use
+# blank. GOOGLE_MAPS_API_KEY, CESIUM_ION_TOKEN and MAPILLARY_CLIENT_TOKEN are
+# baked into the bundle at build time — redeploy after changing them, and
+# restrict them to this service's domain (see SECURITY.md).
+#
+# This is a public, key-brokering server: set provider-side spend caps (OpenAI
+# usage limits, Google Cloud budgets/quotas) and consider an auth proxy such as
+# Cloudflare Access in front of it.
+services:
+  - type: web
+    name: gods-eye-view
+    runtime: node
+    # Starter keeps the process warm; the free plan sleeps, which drops the
+    # AISStream websocket and the in-memory provider caches.
+    plan: starter
+    buildCommand: npm ci && npm run build
+    startCommand: npx vite preview --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
+    envVars:
+      # package.json engines: >=24.14.0 <25 || >=26 <27
+      - key: NODE_VERSION
+        value: 24.14.0
+      # Exact hostnames only (no wildcards). Add a custom domain comma-separated,
+      # e.g. gods-eye-view.onrender.com,globe.example.com
+      - key: GEV_ALLOWED_HOSTS
+        value: gods-eye-view.onrender.com
+      - key: GEV_RATELIMIT_GOOGLE_PER_MIN
+        value: '60'
+      - key: GEV_RATELIMIT_OPENAI_PER_MIN
+        value: '30'
+
+      # Client-exposed (build time)
+      - key: GOOGLE_MAPS_API_KEY
+        sync: false
+      - key: CESIUM_ION_TOKEN
+        sync: false
+      - key: MAPILLARY_CLIENT_TOKEN
+        sync: false
+
+      # Server-side only
+      - key: GOOGLE_MAPS_SERVER_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: AISSTREAM_API_KEY
+        sync: false
+      - key: FIRMS_MAP_KEY
+        sync: false
+      - key: TOMTOM_API_KEY
+        sync: false
+      - key: LL2_API_TOKEN
+        sync: false
+      # Use anon if you have no OpenSky account (rate-limited but works).
+      - key: OPENSKY_AUTH_MODE
+        value: oauth
+      - key: OPENSKY_CLIENT_ID
+        sync: false
+      - key: OPENSKY_CLIENT_SECRET
+        sync: false
