@@ -60,6 +60,12 @@ const SCOPE_OUTSIDE_COLOR = { r: 5, g: 5, b: 8 };
  * Pinned in reasonableDefaults.test.mjs.
  */
 export const SCOPE_FEATHER_RATIO_DEFAULT = 0.11;
+
+/**
+ * Whether the scope mask is on for a first run (a link without `sc`).
+ * Off: the globe opens full-screen; DISPLAY → Scope turns the circle on.
+ */
+export const SCOPE_ENABLED_DEFAULT = false;
 /**
  * Terminus opacity at/above SCOPE_TERMINUS_FAR_M — slightly translucent so
  * faint stars survive in the corners at globe scale.
@@ -101,7 +107,7 @@ const SCOPE_TERMINUS_SAMPLE_MS = 120;
 let _canvas = null;
 let _container = null;
 let _viewer = null;
-let _enabled = true;
+let _enabled = SCOPE_ENABLED_DEFAULT;
 let _featherRatio = SCOPE_FEATHER_RATIO_DEFAULT;
 let _resizeObserver = null;
 let _dprQuery = null;
@@ -561,7 +567,7 @@ export function _resetScopeMaskForTest() {
   _canvas = null;
   _container = null;
   _viewer = null;
-  _enabled = true;
+  _enabled = SCOPE_ENABLED_DEFAULT;
   _featherRatio = SCOPE_FEATHER_RATIO_DEFAULT;
   _terminusAlpha = SCOPE_OUTSIDE_ALPHA;
   _terminusOverride = null;
