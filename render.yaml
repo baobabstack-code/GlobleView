@@ -16,9 +16,9 @@ services:
   - type: web
     name: gods-eye-view
     runtime: node
-    # Starter keeps the process warm; the free plan sleeps, which drops the
-    # AISStream websocket and the in-memory provider caches.
-    plan: starter
+    # Free sleeps after 15 min idle, which drops the AISStream websocket and the
+    # in-memory provider caches. Use starter to keep the process warm.
+    plan: free
     buildCommand: npm ci && npm run build
     startCommand: npx vite preview --host 0.0.0.0 --port $PORT
     healthCheckPath: /
