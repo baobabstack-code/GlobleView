@@ -448,12 +448,12 @@ body:not(.ui-clean-view):not(.recording-mode):has(
     #intel-hud[data-variant='minimal'].active
   )
   #cesium-credits {
-  right: auto;
+  right: 1.5rem;
   bottom: calc(2vh + 5rem);
-  left: 1.5rem;
+  left: auto;
   width: auto !important;
   max-width: calc(100vw - 3rem);
-  text-align: left;
+  text-align: right;
 }
 
 #intel-hud[data-variant='tactical'] .hud-bottom-left,
@@ -483,7 +483,8 @@ body:not(.ui-clean-view):not(.recording-mode):has(
     )
     #cesium-credits {
     bottom: calc(2vh + 5rem);
-    left: 0.75rem;
+    right: 0.75rem;
+    left: auto;
     max-width: calc(100vw - 1.5rem);
   }
 

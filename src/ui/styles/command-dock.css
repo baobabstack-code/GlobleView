@@ -238,9 +238,9 @@ body.recording-mode #command-dock {
 
 body.ui-clean-view #cesium-credits,
 body.recording-mode #cesium-credits {
-  right: auto;
+  right: 36px;
   bottom: 36px;
-  left: 36px;
+  left: auto;
 }
 
 #intel-hud[data-variant='minimal'] .hud-bottom-left {

@@ -293,12 +293,13 @@ body.cockpit-mode #cockpit-cloud-effects.active {
    Styled to be unobtrusive but legible against the dark UI. */
 #cesium-credits {
   position: fixed;
-  /* Bottom-LEFT corner, mirrored from the GEV mic pill (right:36/bottom:36) so the two bottom
-     corners are symmetric; sits below the coordinate HUD (.hud-bottom-left, bottom:180). Was
-     dead-center at the bottom, tucked under the LOCATIONS/STYLE panels. Must stay visible (Google
-     /Cesium attribution ToS). */
+  /* Bottom-RIGHT corner, clear of the coordinate HUD on the left. Was bottom-left, and before
+     that dead-center at the bottom, tucked under the LOCATIONS/STYLE panels. Must stay visible
+     (Google/Cesium attribution ToS). */
   bottom: 36px;
-  left: 36px;
+  right: 36px;
+  left: auto;
+  text-align: right;
   z-index: 90;
   max-width: 90vw;
   /* Keep the Google logo + "Data attribution" link on ONE line — they were wrapping to a second
@@ -309,6 +310,12 @@ body.cockpit-mode #cockpit-cloud-effects.active {
   font-size: 10px;
   color: rgba(232, 234, 237, 0.55);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+/* Cesium pins its absolutely-positioned credit row to left:0, which would run
+   off-screen from a right-anchored container; grow it leftward instead. */
+#cesium-credits .cesium-widget-credits {
+  right: 0;
+  left: auto;
 }
 #cesium-credits .cesium-credit-logoContainer,
 #cesium-credits .cesium-credit-textContainer,
