@@ -27,9 +27,9 @@ services:
       - key: NODE_VERSION
         value: 24.14.0
       # Exact hostnames only (no wildcards). Add a custom domain comma-separated,
-      # e.g. gods-eye-view.onrender.com,globe.example.com
+      # e.g. gods-eye-view-i9hi.onrender.com,globe.example.com
       - key: GEV_ALLOWED_HOSTS
-        value: gods-eye-view.onrender.com
+        value: gods-eye-view-i9hi.onrender.com
       - key: GEV_RATELIMIT_GOOGLE_PER_MIN
         value: '60'
       - key: GEV_RATELIMIT_OPENAI_PER_MIN
