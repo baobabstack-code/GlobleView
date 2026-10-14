@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en" data-sensor="normal">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>God's Eye View — Planetary Console</title>
+  <meta name="description" content="A real-time intelligence console for planet Earth. Photorealistic 3D globe, live aircraft, ships, satellites, earthquakes and public cameras, with hands-free voice control. Runs in your browser." />
+  <meta name="theme-color" content="#02060a" />
+  <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Chakra+Petch:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/landing/landing.css" />
+  <script type="module" src="/landing/landing.js"></script>
+</head>
+<body>
+  <!-- Boot sequence: skipped on repeat visits and under reduced motion -->
+  <div id="boot" class="boot" aria-hidden="true">
+    <div class="boot-inner">
+      <pre id="boot-log" class="boot-log"></pre>
+      <div class="boot-bar"><span id="boot-fill"></span></div>
+      <p class="boot-skip">CLICK / ANY KEY TO SKIP</p>
+    </div>
+  </div>
+
+  <div class="fx-scanlines" aria-hidden="true"></div>
+  <div class="fx-noise" aria-hidden="true"></div>
+  <div id="reticle" class="reticle" aria-hidden="true"><span></span></div>
+
+  <header class="nav">
+    <a class="brand" href="#top" aria-label="God's Eye View home">
+      <img src="/logo.svg" alt="" width="38" height="26" />
+      <span class="brand-text">GOD'S EYE <b>VIEW</b></span>
+      <span class="brand-ver">v0.2.1</span>
+    </a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#optics">Optics</a>
+      <a href="#feeds">Feeds</a>
+      <a href="#wall">Missions</a>
+      <a href="#voice">Voice</a>
+      <a href="#deploy">Deploy</a>
+    </nav>
+    <div class="nav-clock" aria-label="Clock">
+      <span><i>UTC</i> <b id="clock-utc">--:--:--</b></span>
+      <span><i>LOC</i> <b id="clock-loc">--:--:--</b></span>
+    </div>
+    <a class="btn btn-sm btn-primary" href="/">Launch&nbsp;Console</a>
+  </header>
+
+  <main id="top">
+    <!-- ============ HERO ============ -->
+    <section class="hero">
+      <canvas id="globe" class="hero-globe" aria-hidden="true"></canvas>
+      <div class="hero-vignette" aria-hidden="true"></div>
+
+      <div class="corner c-tl" aria-hidden="true"></div>
+      <div class="corner c-tr" aria-hidden="true"></div>
+      <div class="corner c-bl" aria-hidden="true"></div>
+      <div class="corner c-br" aria-hidden="true"></div>
+
+      <div class="hero-content">
+        <p class="eyebrow"><span class="dot-live"></span> UPLINK ESTABLISHED // ORBITAL CONSOLE ONLINE</p>
+        <h1 class="hero-title">
+          <span class="glitch" data-text="THE PLANET.">THE PLANET.</span>
+          <span class="hero-title-2">LIVE.</span>
+        </h1>
+        <p class="hero-sub">
+          A spy-satellite simulator in your browser. Then you realize the sources are public and the data is real.
+        </p>
+        <p class="hero-desc">
+          Photorealistic 3D globe. Live aircraft, ships, satellites, earthquakes, traffic and public cameras.
+          Hands-free voice control powered by a realtime AI agent.
+        </p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="/"><span>Launch Console</span><em>→</em></a>
+          <a class="btn btn-ghost" href="#deploy"><span>Deploy Locally</span></a>
+          <a class="btn btn-ghost" href="https://github.com/bilawalsidhu/gods-eye-view" target="_blank" rel="noopener"><span>Source</span><em>↗</em></a>
+        </div>
+        <p class="hero-note">// Start without an account or API keys. Runs on your machine.</p>
+      </div>
+
+      <aside class="hud hud-right" aria-label="Console readout">
+        <div class="hud-row"><i>TARGET</i><b>EARTH</b></div>
+        <div class="hud-row"><i>ALT</i><b id="hud-alt">35,786 KM</b></div>
+        <div class="hud-row"><i>LAT</i><b id="hud-lat">00.0000°</b></div>
+        <div class="hud-row"><i>LON</i><b id="hud-lon">000.0000°</b></div>
+        <div class="hud-row"><i>LAYERS</i><b>20</b></div>
+        <div class="hud-row"><i>KEYLESS</i><b>17</b></div>
+        <div class="hud-row"><i>MODE</i><b id="hud-mode">NORMAL</b></div>
+      </aside>
+
+      <div id="optics" class="optics" role="group" aria-label="Optics: switch the sensor the page renders through">
+        <span class="optics-label">OPTICS</span>
+        <button type="button" data-mode="normal" aria-pressed="true"><kbd>1</kbd>NORMAL</button>
+        <button type="button" data-mode="nvg" aria-pressed="false"><kbd>2</kbd>NVG</button>
+        <button type="button" data-mode="flir" aria-pressed="false"><kbd>3</kbd>FLIR</button>
+        <button type="button" data-mode="crt" aria-pressed="false"><kbd>4</kbd>CRT</button>
+        <button type="button" data-mode="noir" aria-pressed="false"><kbd>5</kbd>NOIR</button>
+      </div>
+
+      <a class="scroll-cue" href="#feeds" aria-label="Scroll to feeds"><span></span>SCROLL</a>
+    </section>
+
+    <!-- ============ TICKER ============ -->
+    <div class="ticker" aria-hidden="true">
+      <div class="ticker-track">
+        <span>ADS-B ✦ AIS ✦ CELESTRAK TLE ✦ USGS SEISMIC ✦ NASA FIRMS ✦ CCTV MESH ✦ RADIO BROWSER ✦ GTFS-RT TRANSIT ✦ GBFS ✦ NOAA GFS ✦ ECMWF IFS ✦ NHC / CPHC ✦ LAUNCH LIBRARY 2 ✦ OPENSTREETMAP ✦ GOOGLE PHOTOREALISTIC 3D ✦ MAPILLARY ✦ OSRM ✦ </span>
+        <span>ADS-B ✦ AIS ✦ CELESTRAK TLE ✦ USGS SEISMIC ✦ NASA FIRMS ✦ CCTV MESH ✦ RADIO BROWSER ✦ GTFS-RT TRANSIT ✦ GBFS ✦ NOAA GFS ✦ ECMWF IFS ✦ NHC / CPHC ✦ LAUNCH LIBRARY 2 ✦ OPENSTREETMAP ✦ GOOGLE PHOTOREALISTIC 3D ✦ MAPILLARY ✦ OSRM ✦ </span>
+      </div>
+    </div>
+
+    <!-- ============ STATS ============ -->
+    <section class="stats reveal" aria-label="By the numbers">
+      <div class="stat"><b data-count="11000" data-suffix="+">0</b><span>Live aircraft tracked</span></div>
+      <div class="stat"><b data-count="838">0</b><span>Satellites in catalog</span></div>
+      <div class="stat"><b data-count="3900" data-prefix="~">0</b><span>Public cameras projected in 3D</span></div>
+      <div class="stat"><b data-count="750">0</b><span>Radio stations on the tuner</span></div>
+      <div class="stat"><b data-count="30">0</b><span>Voice tools</span></div>
+    </section>
+
+    <!-- ============ FEEDS ============ -->
+    <section id="feeds" class="section">
+      <header class="section-head reveal">
+        <p class="section-tag">[01] SIGNAL STACK</p>
+        <h2>Twenty feeds. <em>One globe.</em></h2>
+        <p class="section-lede">Flight transponders, ship beacons, orbital elements, seismographs and public cameras already describe the world. God's Eye View puts them in one place, so you can move from the whole planet down to a single aircraft, ship or street.</p>
+        <ul class="legend">
+          <li><span class="k k-free"></span>No key</li>
+          <li><span class="k k-key"></span>Free key</li>
+          <li><span class="k k-paid"></span>Metered</li>
+        </ul>
+      </header>
+
+      <div class="feed-grid">
+        <article class="feed reveal" data-auth="free"><i>✈</i><h3>Live Flights</h3><p>11,000+ aircraft and route history</p><code>OPENSKY · ADSB.LOL</code></article>
+        <article class="feed reveal" data-auth="free"><i>⚑</i><h3>Military Flights</h3><p>ADS-B military traffic in amber</p><code>ADSB.LOL</code></article>
+        <article class="feed reveal" data-auth="key"><i>⛴</i><h3>Live Vessels</h3><p>Thousands of ships worldwide</p><code>AISSTREAM</code></article>
+        <article class="feed reveal" data-auth="free"><i>◎</i><h3>Satellites</h3><p>838-object catalog, plus the full Starlink shell</p><code>CELESTRAK</code></article>
+        <article class="feed reveal" data-auth="free"><i>≋</i><h3>Earthquakes</h3><p>Global seismic activity, last 24h</p><code>USGS</code></article>
+        <article class="feed reveal" data-auth="free"><i>◉</i><h3>CCTV Mesh</h3><p>~3,900 public cameras projected into the 3D city</p><code>CITY APIS</code></article>
+        <article class="feed reveal" data-auth="key"><i>▲</i><h3>Active Fires</h3><p>NASA detections, trailing 24h</p><code>NASA FIRMS</code></article>
+        <article class="feed reveal" data-auth="free"><i>⇡</i><h3>Space Missions</h3><p>Rolling 30-day launches with stage and recovery detail</p><code>LAUNCH LIBRARY 2</code></article>
+        <article class="feed reveal" data-auth="free"><i>∿</i><h3>Radio</h3><p>Analog tuner across 750 geolocated stations</p><code>RADIO BROWSER</code></article>
+        <article class="feed reveal" data-auth="free"><i>⇶</i><h3>Transit</h3><p>Live buses, trams, metros, trains and ferries</p><code>GTFS-REALTIME</code></article>
+        <article class="feed reveal" data-auth="free"><i>≈</i><h3>Wind &amp; Weather</h3><p>Forecast wind, radar, clouds, lightning, cyclones</p><code>NOAA · ECMWF</code></article>
+        <article class="feed reveal" data-auth="paid"><i>▦</i><h3>Photorealistic 3D</h3><p>Google 3D cities and world terrain</p><code>ION · GOOGLE</code></article>
+      </div>
+      <p class="feed-more reveal">+ Traffic · Mapped ALPR cameras · Street Level · Bikeshare · Directions · Mapped Installations · Map stack</p>
+    </section>
+
+    <!-- ============ MONITOR WALL ============ -->
+    <section id="wall" class="section">
+      <header class="section-head reveal">
+        <p class="section-tag">[02] FIELD MISSIONS</p>
+        <h2>Click anything. <em>Ride along.</em></h2>
+        <p class="section-lede">The camera locks on, a trail draws behind the target, and its live telemetry comes up. Then you can drop into the cockpit.</p>
+      </header>
+
+      <div class="wall">
+        <figure class="monitor monitor-lg reveal">
+          <div class="monitor-bar"><span class="rec"></span>FEED-01 // COCKPIT<b>LIVE ADS-B</b></div>
+          <img src="/landing/media/12-switch-aircraft-cockpit.gif" alt="Jumping between live aircraft and falling straight into a cockpit view" loading="lazy" decoding="async" />
+          <figcaption><b>Cockpit view.</b> Ride a real aircraft over real terrain, and step through every contact within 250 km.</figcaption>
+        </figure>
+        <figure class="monitor reveal">
+          <div class="monitor-bar"><span class="rec"></span>FEED-02 // ORBIT<b>ISS</b></div>
+          <img src="/landing/media/14-iss-over-ukraine.gif" alt="Tracking the ISS along its orbital path as it crosses over Ukraine" loading="lazy" decoding="async" />
+          <figcaption><b>Orbit tracking.</b> Click the ISS and fly alongside it, orbit ring included.</figcaption>
+        </figure>
+        <figure class="monitor reveal">
+          <div class="monitor-bar"><span class="rec"></span>FEED-03 // OPTICS<b>CRT·FLIR·NVG</b></div>
+          <img src="/landing/media/01-style-sweep.gif" alt="Cycling a dense live globe through CRT, FLIR, and NVG" loading="lazy" decoding="async" />
+          <figcaption><b>Reskin reality.</b> GLSL sensor looks re-render the whole live planet.</figcaption>
+        </figure>
+        <figure class="monitor reveal">
+          <div class="monitor-bar"><span class="rec"></span>FEED-04 // APRON<b>3D HANGAR</b></div>
+          <img src="/landing/media/airport-ground-traffic-google-3d.gif" alt="Descending to airport taxiways with 3D flight models" loading="lazy" decoding="async" />
+          <figcaption><b>Airport ops.</b> Descend to the taxiways and watch grounded contacts swap to real 3D models.</figcaption>
+        </figure>
+        <figure class="monitor reveal">
+          <div class="monitor-bar"><span class="rec"></span>FEED-05 // LAUNCH<b>FALCON 9</b></div>
+          <img src="/landing/media/08-falcon9-replay.gif" alt="A reconstructed Falcon 9 ascent curving into its projected orbit" loading="lazy" decoding="async" />
+          <figcaption><b>Launch replay.</b> Reconstructed ascents climbing into their projected orbits.</figcaption>
+        </figure>
+        <figure class="monitor reveal">
+          <div class="monitor-bar"><span class="rec"></span>FEED-06 // SEABED<b>CABLES</b></div>
+          <img src="/landing/media/09-undersea-cables.gif" alt="Submarine internet cables across the ocean floor" loading="lazy" decoding="async" />
+          <figcaption><b>Infrastructure.</b> Submarine cables, datacenters and dams staged in one switch.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ============ VOICE ============ -->
+    <section id="voice" class="section voice">
+      <header class="section-head reveal">
+        <p class="section-tag">[03] VOICE LINK</p>
+        <h2>Don't click. <em>Command.</em></h2>
+        <p class="section-lede">Click <b>GEV MIC</b> and talk. The agent reads live scene context (coordinates, street names, active layers, view scale) before it answers, and only confirms actions that succeeded.</p>
+      </header>
+
+      <div class="voice-grid">
+        <div class="voice-tabs reveal" role="tablist" aria-label="Voice command categories">
+          <button type="button" role="tab" data-cat="direct" aria-selected="true"><b>01</b> Direct it<small>Drone-operator camera verbs</small></button>
+          <button type="button" role="tab" data-cat="annotate" aria-selected="false"><b>02</b> Annotate it<small>A whiteboard over the real world</small></button>
+          <button type="button" role="tab" data-cat="interrogate" aria-selected="false"><b>03</b> Interrogate it<small>Analyst queries on live layers</small></button>
+          <button type="button" role="tab" data-cat="operate" aria-selected="false"><b>04</b> Operate it<small>The whole console, hands-free</small></button>
+        </div>
+
+        <div class="term reveal" aria-live="polite">
+          <div class="term-bar"><span></span><span></span><span></span><b>gev://voice-link — realtime</b></div>
+          <div class="term-body">
+            <div class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <p class="term-line"><span class="prompt">OPERATOR&gt;</span> <span id="voice-text"></span><span class="caret"></span></p>
+            <p class="term-line term-ack" id="voice-ack"></p>
+          </div>
+        </div>
+      </div>
+      <p class="voice-foot reveal">Also an <b>MCP server</b>: ask Claude Desktop, Codex or ChatGPT desktop to show a place, and the live globe opens in the conversation.</p>
+    </section>
+
+    <!-- ============ DEPLOY ============ -->
+    <section id="deploy" class="section">
+      <header class="section-head reveal">
+        <p class="section-tag">[04] DEPLOY</p>
+        <h2>Zero keys. <em>Two paths.</em></h2>
+        <p class="section-lede">Both open the same app, with Esri satellite imagery and keyless terrain. Keys are upgrades, not prerequisites. Add them from the <b>POWER UP</b> panel inside the app.</p>
+      </header>
+
+      <div class="deploy-grid">
+        <article class="path reveal">
+          <p class="path-id">PATH_01</p>
+          <h3>One click, no terminal</h3>
+          <ol>
+            <li>Install or update <b>Pinokio 8.2+</b></li>
+            <li>Open God's Eye View in Pinokio</li>
+            <li>Click <b>Install</b>, then <b>Start</b></li>
+          </ol>
+          <p class="path-os">WINDOWS · MACOS · LINUX</p>
+          <a class="btn btn-ghost" href="https://pinokio.co/apps/github-com-bilawalsidhu-gods-eye-view" target="_blank" rel="noopener"><span>Open in Pinokio</span><em>↗</em></a>
+        </article>
+
+        <article class="path reveal">
+          <p class="path-id">PATH_02</p>
+          <h3>Terminal / coding agent</h3>
+          <div class="code">
+            <button type="button" class="copy" data-copy="code-block" aria-label="Copy install commands">COPY</button>
+<pre id="code-block"><span class="c">$</span> git clone https://github.com/bilawalsidhu/gods-eye-view.git
+<span class="c">$</span> cd gods-eye-view
+<span class="c">$</span> npm ci
+<span class="c">$</span> npm run doctor
+<span class="c">$</span> npm run dev</pre>
+          </div>
+          <p class="path-os">NODE 24.14+ OR 26.X → OPEN LOCALHOST:4173</p>
+        </article>
+      </div>
+
+      <div class="tiers reveal">
+        <div class="tier"><span class="k k-free"></span><b>Nothing</b><p>Esri World Imagery + keyless terrain. OSM fallback.</p></div>
+        <div class="tier"><span class="k k-key"></span><b>Free Cesium ion token</b><p>Google Photorealistic 3D cities and world terrain.</p></div>
+        <div class="tier"><span class="k k-paid"></span><b>Google Maps key</b><p>3D direct from Google, plus Google place search.</p></div>
+      </div>
+    </section>
+
+    <!-- ============ MANIFESTO ============ -->
+    <section class="manifesto reveal">
+      <blockquote>
+        <p>“Half the magic is that it looks like a forbidden cockpit. The other half is that every line of code is inspectable.”</p>
+      </blockquote>
+      <div class="proof">
+        <span><b>#1</b> GitHub Trending</span>
+        <span><b>5M+</b> views on YouTube</span>
+        <span><b>25M+</b> across socials</span>
+        <span><b>#8</b> Product of the Day</span>
+      </div>
+      <a class="btn btn-primary btn-xl" href="/"><span>Enter the Console</span><em>→</em></a>
+      <p class="tagline">NO PLACE LEFT BEHIND.</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>© GOD'S EYE VIEW · MIT LICENSE · OPEN SOURCE</span>
+    <span>Public sources. Real data. Traffic is simulated along real roads, and camera poses and launch trajectories are estimates.</span>
+    <a href="https://github.com/bilawalsidhu/gods-eye-view" target="_blank" rel="noopener">GITHUB ↗</a>
+  </footer>
+</body>
+</html>
