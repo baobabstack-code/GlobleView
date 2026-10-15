@@ -76,7 +76,7 @@ test('build helper does not discover environment values or construct local provi
     );
     assert.deepEqual(
       config.plugins.slice(3).map((plugin) => plugin.name),
-      ['embed-framing', 'panel-build'],
+      ['landing-root', 'embed-framing', 'panel-build'],
     );
   } finally {
     if (before === undefined) delete process.env.GOOGLE_MAPS_API_KEY;
@@ -89,15 +89,51 @@ test('root config retains existing named exports and standalone provider order',
     assert.equal(compatibility[name], value, name);
   const config = standaloneConfig({ mode: 'test' });
   assert.deepEqual(
-    config.plugins.slice(3, -4).map((plugin) => plugin.name),
+    config.plugins.slice(3, -5).map((plugin) => plugin.name),
     providers.localProviderPlugins().map((plugin) => plugin.name),
   );
-  assert.equal(config.plugins.at(-5).name, 'gev-key-setup');
+  assert.equal(config.plugins.at(-6).name, 'gev-key-setup');
   // The local MCP route follows every provider and precedes the API fallback.
-  assert.equal(config.plugins.at(-4).name, 'local-mcp');
-  assert.equal(config.plugins.at(-3).name, 'api-not-found');
+  assert.equal(config.plugins.at(-5).name, 'local-mcp');
+  assert.equal(config.plugins.at(-4).name, 'api-not-found');
+  // Landing routes rewrite before embed framing reads the document URL.
+  assert.equal(config.plugins.at(-3).name, 'landing-root');
   assert.equal(config.plugins.at(-2).name, 'embed-framing');
   assert.equal(config.plugins.at(-1).name, 'panel-build');
+});
+
+test('landing root is opt-in and keeps application queries on the app', async () => {
+  const { landingRootPlugin, landingRootRewrite } =
+    await import('../../build/landing-root.js');
+  const { isEmbedDocumentRequest } =
+    await import('../../build/embed-framing.js');
+  assert.equal(landingRootRewrite('/'), '/landing/index.html');
+  assert.equal(landingRootRewrite('/app'), '/index.html');
+  assert.equal(landingRootRewrite('/app/'), '/index.html');
+  assert.equal(landingRootRewrite('/?setup=1'), '/index.html?setup=1');
+  assert.equal(landingRootRewrite('/app?embed=1'), '/index.html?embed=1');
+  assert.equal(
+    isEmbedDocumentRequest(landingRootRewrite('/app?embed=1')),
+    true,
+  );
+  for (const url of ['/api/x', '/landing/index.html', '/assets/a.js', '/apps'])
+    assert.equal(landingRootRewrite(url), null, url);
+
+  // Unset, no middleware is installed and / stays the application.
+  assert.equal(
+    landingRootPlugin({ enabled: false }).configureServer,
+    undefined,
+  );
+
+  let middleware;
+  landingRootPlugin({ enabled: true }).configurePreviewServer({
+    middlewares: { use: (fn) => (middleware = fn) },
+  });
+  const req = { url: '/app?embed=1' };
+  let called = false;
+  middleware(req, {}, () => (called = true));
+  assert.equal(req.url, '/index.html?embed=1');
+  assert.ok(called);
 });
 
 test('build export resolves in Node and has no browser fallback', async () => {

@@ -34,6 +34,9 @@ services:
       # The credential panel and /mcp stay loopback-only regardless.
       - key: GEV_TRUST_PROXY
         value: '1'
+      # Serve the landing page at / and the app at /app.
+      - key: GEV_LANDING_ROOT
+        value: '1'
       - key: GEV_RATELIMIT_GOOGLE_PER_MIN
         value: '60'
       - key: GEV_RATELIMIT_OPENAI_PER_MIN
