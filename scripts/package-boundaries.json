@@ -1604,6 +1604,7 @@
       "src/data/vesselLabels.js",
       "src/firstRunExperience.js",
       "src/hud.js",
+      "src/hudClock.js",
       "src/hudLocality.js",
       "src/hudSummaryResponse.js",
       "src/keySetup.js",
