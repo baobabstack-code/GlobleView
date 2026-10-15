@@ -1292,26 +1292,11 @@ html:not(.js) .reveal {
 }
 .manifesto blockquote {
   max-width: 980px;
-  margin: 0 auto 44px;
+  margin: 0 auto 56px;
 }
 .manifesto blockquote p {
   margin: 0;
   font: 700 clamp(24px, 3.4vw, 44px) / 1.25 var(--display);
-}
-.proof {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 12px 34px;
-  margin-bottom: 52px;
-  font: 500 13px var(--mono);
-  letter-spacing: 0.08em;
-  color: var(--muted);
-  text-transform: uppercase;
-}
-.proof b {
-  color: var(--a);
-  margin-right: 6px;
 }
 .tagline {
   margin: 44px 0 0;
