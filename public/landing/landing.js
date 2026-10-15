@@ -4,6 +4,15 @@
 const root = document.documentElement;
 root.classList.add('js');
 
+// On hosts that serve this page at "/", share links and ?setup=1 still point
+// there. Anything other than one of this page's section anchors belongs to
+// the app, so hand it over with the query and hash intact.
+const fragment = location.hash.slice(1);
+const handoff =
+  location.search !== '' ||
+  (fragment !== '' && !document.getElementById(fragment));
+if (handoff) location.replace(`/app${location.search}${location.hash}`);
+
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const finePointer = matchMedia('(pointer: fine)').matches;
 
@@ -848,11 +857,13 @@ function copyButtons() {
   }
 }
 
-boot();
-clocks();
-optics();
-globe();
-reticle();
-reveals();
-voice();
-copyButtons();
+if (!handoff) {
+  boot();
+  clocks();
+  optics();
+  globe();
+  reticle();
+  reveals();
+  voice();
+  copyButtons();
+}
