@@ -5,6 +5,8 @@ import { initImageryBoxTool } from '../ui/imageryBoxTool.js';
 import { createRecentImageryPanel } from '../ui/recentImagery.js';
 import { initGevVoiceCommands } from '../voice/gevRealtime.js';
 import { installViews, isEmbeddedInline } from './embed.js';
+import { isPlayMode } from '../play/mode.js';
+import { installPlayMode } from '../ui/play.js';
 import { installScopeMask, destroyScopeMask } from '../scopeMask.js';
 import {
   installRenderGovernor,
@@ -188,5 +190,9 @@ export function createApplicationTools({
       signal,
     }),
   );
+  if (isPlayMode())
+    defer(
+      installPlayMode({ shell: styleManager, viewer, annotations, signal }),
+    );
   return { sceneDirector, annotations, voiceCommands };
 }

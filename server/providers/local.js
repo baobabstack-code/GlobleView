@@ -10,6 +10,8 @@ import { regionalBriefProxy } from './regional/briefing.js';
 import { geocodeProxy } from './regional/place.js';
 import { weatherEffectsProxy } from './regional/weather-effects.js';
 import { cctvProxy } from './cctv.js';
+import { createCctvCatalog } from './cctv/catalog.js';
+import { playProxy } from './play.js';
 import { defaultSourceRoot } from './common/source-root.js';
 import { radioBrowserProxy } from './radio.js';
 import { gbfsProxy } from './gbfs.js';
@@ -32,6 +34,8 @@ import { windProxy } from './wind.js';
  * `realtime` configures the voice session token endpoint.
  */
 function localProviderPlugins({ realtime } = {}) {
+  // One camera catalog serves the CCTV layer and the guessing game.
+  const getCctvSources = createCctvCatalog({ sourceRoot: defaultSourceRoot });
   return [
     openSkyProxy(),
     celestrakProxy(),
@@ -45,7 +49,8 @@ function localProviderPlugins({ realtime } = {}) {
     regionalBriefProxy(),
     geocodeProxy(),
     weatherEffectsProxy(),
-    cctvProxy({ sourceRoot: defaultSourceRoot }),
+    cctvProxy({ sourceRoot: defaultSourceRoot, getCctvSources }),
+    playProxy({ getSources: getCctvSources }),
     radioBrowserProxy(),
     gbfsProxy(),
     localReceiversProxy(),

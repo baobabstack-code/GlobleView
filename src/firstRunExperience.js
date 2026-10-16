@@ -211,6 +211,8 @@ export function shouldShowFirstRun({
   if (hasShareState) return false;
   const params = new URLSearchParams(location?.search || '');
   if (params.get('welcome') === '0') return false;
+  // The guessing game has its own start screen.
+  if (params.get('mode') === 'play') return false;
   // An embedded globe never shows the welcome launcher.
   if (params.get('embed') === '1' || globalThis.GEV_EMBED_INLINE === true)
     return false;

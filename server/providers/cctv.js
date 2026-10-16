@@ -33,8 +33,10 @@ export { CCTV_FRAME_FETCH_TIMEOUT_MS, fetchCctvImageFromUpstream };
  *
  * @returns {import('vite').Plugin}
  */
-export function cctvProxy({ sourceRoot = process.cwd() } = {}) {
-  const getCctvSources = createCctvCatalog({ sourceRoot });
+export function cctvProxy({
+  sourceRoot = process.cwd(),
+  getCctvSources = createCctvCatalog({ sourceRoot }),
+} = {}) {
   /** @type {Map<string,{id:string,status:string,sourceKind:string,label:string,message:string,updatedAt:number}>} */
   const health = new Map();
   /** Cap on health map entries to prevent unbounded growth. Sized to the

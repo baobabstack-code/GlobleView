@@ -1488,3 +1488,20 @@ html:not(.js) .reveal {
     transform: none;
   }
 }
+
+/* ---------- Play ---------- */
+
+.play-steps {
+  margin-top: 0;
+}
+.play-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px 24px;
+  margin-top: 32px;
+}
+.play-cta .hero-note {
+  margin: 0;
+  flex: 1 1 280px;
+}

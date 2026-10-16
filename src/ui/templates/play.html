@@ -1,0 +1,78 @@
+  <!-- Camera guessing game (?mode=play). Hidden unless the page is in play mode. -->
+  <section id="play-root" class="play-root" aria-label="Where's this camera? game" hidden>
+    <header class="play-bar">
+      <span class="play-brand">GEV // <b>WHERE'S THIS CAMERA?</b></span>
+      <span class="play-progress" id="play-progress" aria-live="polite"></span>
+      <span class="play-total" id="play-total"></span>
+      <a class="play-exit" href="/app" aria-label="Exit the game">EXIT</a>
+    </header>
+
+    <div class="play-screen" data-screen="start">
+      <p class="play-tag">[ LIVE PUBLIC CAMERAS · REAL TIME ]</p>
+      <h1 class="play-title">Where's this <em>camera?</em></h1>
+      <p class="play-lede">You get a live frame from a real public traffic camera somewhere on Earth. Spin the globe, drop a pin, and score up to 5,000 points by how close you land. Five rounds.</p>
+      <div class="play-modes">
+        <button type="button" class="play-btn play-btn-primary" data-start="daily">
+          <span>Daily challenge</span><small id="play-daily-best"></small>
+        </button>
+        <button type="button" class="play-btn" data-start="random">
+          <span>Random game</span><small id="play-random-best"></small>
+        </button>
+      </div>
+      <p class="play-note" id="play-start-status" role="status"></p>
+    </div>
+
+    <div class="play-screen" data-screen="round" hidden>
+      <figure class="play-feed">
+        <div class="play-feed-bar"><span class="play-rec"></span><span id="play-feed-label">FEED</span><b>LIVE</b></div>
+        <div class="play-feed-frame">
+          <!-- Cameras burn their operator, place and clock into the picture's
+               top and bottom edges; the bars cover those captions. -->
+          <div class="play-feed-shot" id="play-frame-shot" hidden>
+            <img id="play-frame" alt="Live frame from the camera to locate" />
+            <span class="play-redact play-redact-top" aria-hidden="true">REDACTED</span>
+            <span class="play-redact play-redact-bottom" aria-hidden="true">REDACTED</span>
+          </div>
+          <p class="play-feed-error" id="play-frame-error" hidden>This camera stopped answering.</p>
+        </div>
+      </figure>
+      <p class="play-hint" id="play-hint">Click the globe to drop your pin.</p>
+      <div class="play-actions">
+        <button type="button" class="play-btn play-btn-primary" id="play-guess" disabled>Guess</button>
+        <button type="button" class="play-btn play-btn-ghost" id="play-skip">Skip</button>
+      </div>
+    </div>
+
+    <div class="play-screen" data-screen="reveal" hidden>
+      <p class="play-tag" id="play-reveal-tag"></p>
+      <p class="play-score"><b id="play-round-score">0</b> pts</p>
+      <p class="play-distance" id="play-distance"></p>
+      <dl class="play-answer">
+        <dt>Camera</dt><dd id="play-answer-name"></dd>
+        <dt>Place</dt><dd id="play-answer-city"></dd>
+        <dt>Source</dt><dd id="play-answer-credit"></dd>
+      </dl>
+      <div class="play-actions">
+        <button type="button" class="play-btn play-btn-primary" id="play-next">Next round</button>
+      </div>
+    </div>
+
+    <div class="play-screen" data-screen="results" hidden>
+      <p class="play-tag" id="play-results-tag"></p>
+      <p class="play-final"><b id="play-final-score">0</b><span>/ 25,000</span></p>
+      <p class="play-best" id="play-best"></p>
+      <ol class="play-rounds" id="play-rounds"></ol>
+      <div class="play-actions">
+        <button type="button" class="play-btn play-btn-primary" id="play-again">Play again</button>
+        <button type="button" class="play-btn play-btn-ghost" id="play-copy">Copy result</button>
+      </div>
+    </div>
+
+    <div class="play-screen" data-screen="unavailable" hidden>
+      <h1 class="play-title">Game server <em>offline</em></h1>
+      <p class="play-lede" id="play-unavailable-text">This site only serves the globe. The game runs on the full server.</p>
+      <div class="play-actions">
+        <a class="play-btn play-btn-primary" id="play-home-link" href="#">Play on the full server</a>
+      </div>
+    </div>
+  </section>

@@ -522,14 +522,26 @@ export class ShareLinkManager {
     }
   }
 
+  /**
+   * Stop (or resume) writing the view into the address bar. The guessing game
+   * suspends it: the hash would carry the camera position, i.e. the answer.
+   */
+  suspendHashUpdates(suspended) {
+    this._hashSuspended = Boolean(suspended);
+    if (this._hashSuspended) clearTimeout(this._debounceTimer);
+    else this._scheduleUpdate();
+  }
+
   _scheduleUpdate() {
-    if (this._destroyed || this._initialRestorePending) return;
+    if (this._destroyed || this._initialRestorePending || this._hashSuspended)
+      return;
     clearTimeout(this._debounceTimer);
     this._debounceTimer = setTimeout(() => this._updateHash(), DEBOUNCE_MS);
   }
 
   _updateHash() {
-    if (this._destroyed || this._initialRestorePending) return;
+    if (this._destroyed || this._initialRestorePending || this._hashSuspended)
+      return;
     const params = this._buildHashParams();
     if (!params) return;
     // The hash belongs to this page's address, not the document base the

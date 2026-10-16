@@ -198,6 +198,10 @@ const RECOGNIZED = new Set([
   "body:not(.ui-clean-view):not(.recording-mode):has(#intel-hud[data-variant='minimal'].active) #cesium-credits",
   'body.ui-clean-view #cesium-credits',
   'body.recording-mode #cesium-credits',
+  // The camera game (?mode=play) moves the credits to the top on phones,
+  // clear of its bottom sheet. Play mode hides the command dock and its
+  // trays, so nothing this model guards can meet them there.
+  'body.ui-play.ui-clean-view #cesium-credits',
   // dock
   '#command-dock',
   '#command-dock:has(#location-bar:not(.collapsed))',

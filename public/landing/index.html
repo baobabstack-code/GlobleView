@@ -38,6 +38,7 @@
       <a href="#feeds">Feeds</a>
       <a href="#wall">Missions</a>
       <a href="#voice">Voice</a>
+      <a href="#play">Play</a>
       <a href="#deploy">Deploy</a>
     </nav>
     <div class="nav-clock" aria-label="Clock">
@@ -73,7 +74,7 @@
         </p>
         <div class="hero-cta">
           <a class="btn btn-primary" href="/app"><span>Launch Console</span><em>→</em></a>
-          <a class="btn btn-ghost" href="#deploy"><span>Deploy Locally</span></a>
+          <a class="btn btn-ghost" href="https://gods-eye-view-i9hi.onrender.com/app?mode=play"><span>Play the Game</span><em>◎</em></a>
           <a class="btn btn-ghost" href="https://github.com/baobabstack-code/GlobleView" target="_blank" rel="noopener"><span>Source</span><em>↗</em></a>
         </div>
         <p class="hero-note">// Start without an account or API keys. Runs on your machine.</p>
@@ -218,10 +219,30 @@
       <p class="voice-foot reveal">Also an <b>MCP server</b>: ask Claude Desktop, Codex or ChatGPT desktop to show a place, and the live globe opens in the conversation.</p>
     </section>
 
+    <!-- ============ PLAY ============ -->
+    <section id="play" class="section">
+      <header class="section-head reveal">
+        <p class="section-tag">[04] GAME MODE</p>
+        <h2>Where's this <em>camera?</em></h2>
+        <p class="section-lede">A live frame from a real public traffic camera, somewhere on Earth. Captions redacted. Spin the globe, drop your pin, and score up to <b>5,000 points</b> a round by how close you land. Five rounds.</p>
+      </header>
+
+      <div class="tiers play-steps reveal">
+        <div class="tier"><span class="k k-free"></span><b>01 · Watch</b><p>A live, unlabelled feed from one of thousands of public cameras.</p></div>
+        <div class="tier"><span class="k k-key"></span><b>02 · Pin</b><p>Read the roads, signs and skyline, then click the globe.</p></div>
+        <div class="tier"><span class="k k-paid"></span><b>03 · Score</b><p>Up to 5,000 points by distance. Copy your result and share it.</p></div>
+      </div>
+
+      <div class="play-cta reveal">
+        <a class="btn btn-primary" href="https://gods-eye-view-i9hi.onrender.com/app?mode=play"><span>Daily Challenge</span><em>→</em></a>
+        <p class="hero-note">// Same five cameras for everyone each day (UTC). The first load can take a minute while the server wakes.</p>
+      </div>
+    </section>
+
     <!-- ============ DEPLOY ============ -->
     <section id="deploy" class="section">
       <header class="section-head reveal">
-        <p class="section-tag">[04] DEPLOY</p>
+        <p class="section-tag">[05] DEPLOY</p>
         <h2>Zero keys. <em>Two paths.</em></h2>
         <p class="section-lede">Both open the same app, with Esri satellite imagery and keyless terrain. Keys are upgrades, not prerequisites. Add them from the <b>POWER UP</b> panel inside the app.</p>
       </header>

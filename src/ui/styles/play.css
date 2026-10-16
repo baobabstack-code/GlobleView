@@ -1,0 +1,442 @@
+/* "Where's this camera?" (?mode=play). Everything that would name the place
+   is hidden while the game runs; the globe stays interactive beside the
+   panel. */
+
+body.ui-play
+  :is(
+    #intel-hud,
+    #command-dock,
+    #location-bar,
+    #left-panel-stack,
+    #right-context-rail,
+    #view-switcher,
+    #first-run-launcher,
+    #key-setup-chip,
+    #key-setup,
+    #title-bar,
+    #style-indicator,
+    #control-panel,
+    #data-panel,
+    #global-context-panel,
+    #scene-panel,
+    #world-overlay-actions,
+    #cockpit-hud,
+    #clean-view-exit
+  ) {
+  display: none !important;
+}
+
+.play-root[hidden] {
+  display: none !important;
+}
+
+.play-root {
+  --play-cut: 14px;
+  position: fixed;
+  z-index: 60;
+  top: 16px;
+  left: 16px;
+  bottom: 16px;
+  width: min(400px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 18px 20px 22px;
+  overflow-y: auto;
+  color: var(--text-primary, #e8f6ff);
+  font-family: var(--font-sans, 'Inter', sans-serif);
+  background: rgba(4, 12, 18, 0.86);
+  border: 1px solid rgba(0, 212, 255, 0.28);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.4),
+    0 24px 60px rgba(0, 0, 0, 0.55),
+    inset 0 0 60px rgba(0, 212, 255, 0.05);
+  backdrop-filter: blur(14px);
+  clip-path: polygon(
+    var(--play-cut) 0,
+    100% 0,
+    100% calc(100% - var(--play-cut)),
+    calc(100% - var(--play-cut)) 100%,
+    0 100%,
+    0 var(--play-cut)
+  );
+}
+
+.play-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed rgba(0, 212, 255, 0.25);
+  font: 500 10px var(--font-mono, monospace);
+  letter-spacing: 0.14em;
+  color: var(--text-dim, #7d98a8);
+}
+.play-brand b {
+  color: var(--accent, #00d4ff);
+  font-weight: 600;
+}
+.play-progress {
+  margin-left: auto;
+  color: var(--text-primary, #e8f6ff);
+}
+.play-total {
+  color: var(--accent, #00d4ff);
+}
+.play-exit {
+  color: var(--text-dim, #7d98a8);
+  text-decoration: none;
+  border: 1px solid rgba(0, 212, 255, 0.25);
+  padding: 3px 8px;
+}
+.play-exit:hover {
+  color: var(--accent, #00d4ff);
+}
+
+.play-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.play-screen[hidden] {
+  display: none;
+}
+
+.play-tag {
+  margin: 0;
+  font: 500 11px var(--font-mono, monospace);
+  letter-spacing: 0.2em;
+  color: var(--accent, #00d4ff);
+}
+.play-title {
+  margin: 0;
+  font: 700 30px/1.05 var(--font-mono, monospace);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.play-title em {
+  display: block;
+  font-style: normal;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--accent, #00d4ff);
+}
+.play-lede {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-secondary, #a9c3d0);
+}
+.play-note,
+.play-hint {
+  margin: 0;
+  min-height: 1.4em;
+  font: 400 12px var(--font-mono, monospace);
+  color: var(--text-secondary, #a9c3d0);
+}
+
+.play-modes,
+.play-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.play-modes .play-btn {
+  flex: 1 1 100%;
+}
+
+.play-btn {
+  --cut: 9px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 3px;
+  padding: 12px 18px;
+  font: 700 12px var(--font-mono, monospace);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--accent, #00d4ff);
+  background: rgba(0, 212, 255, 0.07);
+  border: 0;
+  box-shadow: inset 0 0 0 1px rgba(0, 212, 255, 0.45);
+  cursor: pointer;
+  clip-path: polygon(
+    var(--cut) 0,
+    100% 0,
+    100% calc(100% - var(--cut)),
+    calc(100% - var(--cut)) 100%,
+    0 100%,
+    0 var(--cut)
+  );
+  transition:
+    background var(--transition-fast, 0.15s),
+    box-shadow var(--transition-fast, 0.15s);
+}
+.play-btn small {
+  font: 400 11px var(--font-sans, sans-serif);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-secondary, #a9c3d0);
+}
+.play-btn:hover:not(:disabled) {
+  background: rgba(0, 212, 255, 0.16);
+}
+.play-btn-primary {
+  color: #021018;
+  background: var(--accent, #00d4ff);
+  box-shadow: 0 0 24px rgba(0, 212, 255, 0.35);
+}
+.play-btn-primary small {
+  color: rgba(2, 16, 24, 0.75);
+}
+.play-btn-primary:hover:not(:disabled) {
+  background: #7febff;
+}
+.play-btn-ghost {
+  background: transparent;
+}
+.play-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.play-actions .play-btn {
+  align-items: center;
+  flex: 1 1 auto;
+}
+
+/* The live frame */
+.play-feed {
+  margin: 0;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  background: #000;
+}
+.play-feed-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-bottom: 1px solid rgba(0, 212, 255, 0.25);
+  font: 500 10px var(--font-mono, monospace);
+  letter-spacing: 0.16em;
+  color: var(--text-dim, #7d98a8);
+}
+.play-feed-bar b {
+  margin-left: auto;
+  color: var(--accent, #00d4ff);
+  font-weight: 500;
+}
+.play-rec {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ff4d6d;
+  box-shadow: 0 0 8px #ff4d6d;
+  animation: play-blink 1.4s steps(2) infinite;
+}
+@keyframes play-blink {
+  50% {
+    opacity: 0.2;
+  }
+}
+.play-feed-frame {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(0, 212, 255, 0.04) 0 8px,
+    transparent 8px 16px
+  );
+}
+.play-feed-frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0 2px,
+    rgba(0, 0, 0, 0.18) 2px 3px
+  );
+}
+.play-feed-shot {
+  position: relative;
+  width: 100%;
+}
+.play-feed-shot[hidden] {
+  display: none;
+}
+.play-feed-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 60vh;
+  object-fit: contain;
+}
+/* Burnt-in captions (operator, street, clock) sit on the top and bottom
+   edges of most feeds. */
+.play-redact {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 11%;
+  min-height: 14px;
+  display: grid;
+  place-items: center;
+  font: 700 9px var(--font-mono, monospace);
+  letter-spacing: 0.4em;
+  color: rgba(255, 77, 109, 0.75);
+  background: repeating-linear-gradient(
+    -45deg,
+    #050505 0 6px,
+    #120307 6px 12px
+  );
+}
+.play-redact-top {
+  top: 0;
+  border-bottom: 1px solid rgba(255, 77, 109, 0.5);
+}
+.play-redact-bottom {
+  bottom: 0;
+  border-top: 1px solid rgba(255, 77, 109, 0.5);
+}
+.play-feed-error {
+  margin: 0;
+  padding: 0 20px;
+  font: 400 12px var(--font-mono, monospace);
+  text-align: center;
+  color: var(--text-secondary, #a9c3d0);
+}
+
+/* Reveal */
+.play-score {
+  margin: 0;
+  font: 400 14px var(--font-mono, monospace);
+  color: var(--text-secondary, #a9c3d0);
+}
+.play-score b {
+  font: 700 48px/1 var(--font-mono, monospace);
+  color: var(--accent, #00d4ff);
+  text-shadow: 0 0 22px rgba(0, 212, 255, 0.5);
+}
+.play-distance {
+  margin: 0;
+  font-size: 15px;
+}
+.play-answer {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 14px;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  background: rgba(0, 212, 255, 0.04);
+  font-size: 13px;
+}
+.play-answer dt {
+  font: 500 10px var(--font-mono, monospace);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim, #7d98a8);
+  padding-top: 2px;
+}
+.play-answer dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Results */
+.play-final {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0;
+}
+.play-final b {
+  font: 700 54px/1 var(--font-mono, monospace);
+  color: var(--accent, #00d4ff);
+  text-shadow: 0 0 26px rgba(0, 212, 255, 0.5);
+}
+.play-final span {
+  font: 400 14px var(--font-mono, monospace);
+  color: var(--text-dim, #7d98a8);
+}
+.play-best {
+  margin: 0;
+  font: 500 12px var(--font-mono, monospace);
+  color: #38ff9c;
+}
+.play-rounds {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  counter-reset: play-round;
+}
+.play-rounds li {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: baseline;
+  gap: 10px;
+  padding: 9px 12px;
+  font-size: 13px;
+  counter-increment: play-round;
+}
+.play-rounds li + li {
+  border-top: 1px solid rgba(0, 212, 255, 0.12);
+}
+.play-rounds li::before {
+  content: counter(play-round, decimal-leading-zero);
+  font: 500 10px var(--font-mono, monospace);
+  color: var(--accent, #00d4ff);
+}
+.play-rounds span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.play-rounds small {
+  font: 400 11px var(--font-mono, monospace);
+  color: var(--text-dim, #7d98a8);
+}
+.play-rounds b {
+  font: 600 13px var(--font-mono, monospace);
+  color: var(--text-primary, #e8f6ff);
+}
+
+/* Phones: a bottom sheet so the globe stays reachable above it. */
+@media (max-width: 760px) {
+  .play-root {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    max-height: 58vh;
+    padding: 14px 16px 18px;
+    gap: 12px;
+    clip-path: none;
+    border-width: 1px 0 0;
+  }
+  .play-title {
+    font-size: 24px;
+  }
+  .play-root[data-screen='round'] .play-feed-frame {
+    aspect-ratio: 16 / 9;
+  }
+  /* The map attribution must stay visible; on a phone the sheet covers the
+     bottom, so it moves to the top over the globe. */
+  body.ui-play.ui-clean-view #cesium-credits {
+    top: 40px;
+    bottom: auto;
+    right: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .play-rec {
+    animation: none;
+  }
+}
