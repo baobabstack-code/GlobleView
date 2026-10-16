@@ -41,6 +41,8 @@ services:
         value: '60'
       - key: GEV_RATELIMIT_OPENAI_PER_MIN
         value: '30'
+      - key: GEV_RATELIMIT_GEMINI_PER_MIN
+        value: '30'
 
       # Client-exposed (build time)
       - key: GOOGLE_MAPS_API_KEY
@@ -54,6 +56,8 @@ services:
       - key: GOOGLE_MAPS_SERVER_API_KEY
         sync: false
       - key: OPENAI_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
         sync: false
       - key: AISSTREAM_API_KEY
         sync: false

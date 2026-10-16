@@ -1,10 +1,13 @@
 import { createVoiceCommands as bindVoiceCommands } from './sessionCommands.js';
-import { createRealtimeSession } from './realtimeSession.js';
+import { createProviderSession } from './voiceProvider.js';
 
-/** Default composition; callers may supply another session adapter factory. */
+/**
+ * Default composition: OpenAI Realtime or Gemini Live, whichever the server
+ * and the saved choice select. Callers may supply another adapter factory.
+ */
 export function createVoiceCommands(options) {
   return bindVoiceCommands({
-    createSession: createRealtimeSession,
+    createSession: (hooks) => createProviderSession(hooks),
     ...options,
   });
 }
