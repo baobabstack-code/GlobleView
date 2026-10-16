@@ -71,6 +71,29 @@ async function fetchOpenSkyStates(headers) {
 let _openskyTtlMs = OPENSKY_CACHE_MS;
 /** @type {number} Epoch-ms before which no upstream fetch is attempted. */
 let _openskyCooldownUntil = 0;
+// --- Unreachable backoff ----------------------------------------------------
+// From some hosts (cloud IP ranges) OpenSky never answers: every attempt
+// times out, so without memory each poll waited ~30 s (two 10 s attempts plus
+// the OAuth token) before falling back. After a failure, skip OpenSky for a
+// while and go straight to the regional fallback; the wait doubles while it
+// keeps failing and clears on the first success.
+const OPENSKY_UNREACHABLE_MIN_MS = 60_000;
+const OPENSKY_UNREACHABLE_MAX_MS = 10 * 60_000;
+/** @type {number} Epoch-ms before which OpenSky is treated as unreachable. */
+let _openskyUnreachableUntil = 0;
+/** @type {number} Current unreachable backoff (ms); 0 once OpenSky answers. */
+let _openskyUnreachableBackoffMs = 0;
+/** @type {number} Epoch-ms before which a failed token request isn't retried. */
+let _openskyTokenRetryAt = 0;
+const OPENSKY_TOKEN_RETRY_MS = 5 * 60_000;
+
+/** Record an OpenSky failure and push the next attempt out. */
+function noteOpenSkyUnreachable(now) {
+  _openskyUnreachableBackoffMs = _openskyUnreachableBackoffMs
+    ? Math.min(_openskyUnreachableBackoffMs * 2, OPENSKY_UNREACHABLE_MAX_MS)
+    : OPENSKY_UNREACHABLE_MIN_MS;
+  _openskyUnreachableUntil = now + _openskyUnreachableBackoffMs;
+}
 /**
  * Picks the cache TTL from the remaining daily credit budget.
  * Client polls every 30 s, so tiers ≤30 s cost the same 480 credits/h; the
@@ -124,6 +147,8 @@ export async function getOpenSkyToken() {
   // Coalesce concurrent refresh requests — if a refresh is already in-flight,
   // return the same promise instead of issuing a duplicate token request
   if (_openskyTokenPromise) return _openskyTokenPromise;
+  // The token server was unreachable a moment ago: don't wait on it again.
+  if (now < _openskyTokenRetryAt) return null;
 
   const clientId = process.env.OPENSKY_CLIENT_ID;
   const clientSecret = process.env.OPENSKY_CLIENT_SECRET;
@@ -173,6 +198,7 @@ export async function getOpenSkyToken() {
         's',
       );
       _openskyAuthWarned = false;
+      _openskyTokenRetryAt = 0;
       return _openskyToken;
     } catch (err) {
       if (!_openskyAuthWarned) {
@@ -184,6 +210,7 @@ export async function getOpenSkyToken() {
       }
       _openskyToken = null;
       _openskyTokenExpiry = 0;
+      _openskyTokenRetryAt = Date.now() + OPENSKY_TOKEN_RETRY_MS;
       return null;
     } finally {
       // Clear the shared promise so the next caller can start a fresh refresh
@@ -466,6 +493,48 @@ export function openSkyProxy() {
           return;
         }
 
+        // OpenSky failed recently: answer from the regional fallback (or the
+        // last good snapshot) now instead of waiting on another timeout.
+        if (now < _openskyUnreachableUntil) {
+          if (
+            await serveAdsbLolPointFallback(
+              req,
+              res,
+              requestedMode,
+              'opensky_unreachable_regional_fallback',
+            )
+          )
+            return;
+          const retryAfterSeconds = (_openskyUnreachableUntil - now) / 1000;
+          if (_openskyCacheBody) {
+            res.writeHead(
+              _openskyCacheStatus || 200,
+              buildOpenSkyHeaders({
+                cacheStatus: 'STALE',
+                requestedMode,
+                usedMode: _openskyCacheMeta?.usedMode || 'unknown',
+                reason: 'opensky_unreachable_serving_stale',
+                staleSeconds: (now - _openskyCacheTime) / 1000,
+                retryAfterSeconds,
+              }),
+            );
+            res.end(_openskyCacheBody);
+            return;
+          }
+          res.writeHead(
+            502,
+            buildOpenSkyHeaders({
+              cacheStatus: 'MISS',
+              requestedMode,
+              usedMode: 'error',
+              reason: 'opensky_unreachable',
+              retryAfterSeconds,
+            }),
+          );
+          res.end(JSON.stringify({ error: 'OpenSky is unreachable' }));
+          return;
+        }
+
         const basicUser = process.env.OPENSKY_USERNAME || '';
         const basicPass = process.env.OPENSKY_PASSWORD || '';
         const hasBasicCreds = Boolean(basicUser && basicPass);
@@ -661,6 +730,8 @@ export function openSkyProxy() {
           );
           _openskyTtlMs = openskyAdaptiveTtlMs(remaining);
           _openskyCooldownUntil = 0;
+          _openskyUnreachableUntil = 0;
+          _openskyUnreachableBackoffMs = 0;
         }
 
         res.writeHead(
@@ -675,6 +746,7 @@ export function openSkyProxy() {
         res.end(body);
       } catch (e) {
         console.error('[OpenSky Proxy]', e.message);
+        noteOpenSkyUnreachable(Date.now());
         if (_openskyCacheBody) {
           const cachedMeta = _openskyCacheMeta || {
             requestedMode: normalizeOpenSkyAuthMode(

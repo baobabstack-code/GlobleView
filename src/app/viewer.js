@@ -102,6 +102,21 @@ export function installTrackpadPinchZoom(
   };
 }
 
+/**
+ * Cesium's Tycho-2 star field at 512 px (scripts/build-skybox.mjs): the stock
+ * 1024 px faces are ~870 KB of startup download; these are ~250 KB and look
+ * the same at globe distance. Bundled as hashed assets, so every build and
+ * the panel resolve them against their own base.
+ */
+const SKYBOX_SOURCES = Object.freeze({
+  positiveX: new URL('./skybox/px.jpg', import.meta.url).href,
+  negativeX: new URL('./skybox/mx.jpg', import.meta.url).href,
+  positiveY: new URL('./skybox/py.jpg', import.meta.url).href,
+  negativeY: new URL('./skybox/my.jpg', import.meta.url).href,
+  positiveZ: new URL('./skybox/pz.jpg', import.meta.url).href,
+  negativeZ: new URL('./skybox/mz.jpg', import.meta.url).href,
+});
+
 /** Create the standard globe viewer in caller-owned, visible containers. */
 export function createApplicationViewer({ container, creditContainer }) {
   if (!container || !creditContainer)
@@ -120,6 +135,7 @@ export function createApplicationViewer({ container, creditContainer }) {
     infoBox: false,
     baseLayer: false,
     creditContainer,
+    skyBox: new Cesium.SkyBox({ sources: SKYBOX_SOURCES }),
     msaaSamples: 4,
     contextOptions: { webgl: { preserveDrawingBuffer: true } },
   });

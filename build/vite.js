@@ -3,6 +3,7 @@ import cesium from 'vite-plugin-cesium';
 import { DEFAULT_ALLOWED_HOSTS, hostCheckPlugin } from './allowedHosts.js';
 import { embedFramingPlugin } from './embed-framing.js';
 import { landingRootPlugin } from './landing-root.js';
+import { cacheHeadersPlugin } from './cache-headers.js';
 import { panelBuildPlugin } from './panel.js';
 
 /**
@@ -67,6 +68,8 @@ export function createBrowserViteConfig({
       applicationHtmlPlugin(),
       ...plugins,
       // Before embed framing, which recognises the rewritten app document.
+      // Long-lived caching of hashed and engine assets (preview only).
+      cacheHeadersPlugin(),
       landingRootPlugin(),
       embedFramingPlugin(),
       panelBuildPlugin(),
@@ -83,7 +86,6 @@ export function createBrowserViteConfig({
         '@jtarrio/signals/demod/demodulator.js',
         '@jtarrio/signals/demod/modes.js',
         '@jtarrio/webrtlsdr/rtlsdr.js',
-        'egm96-universal',
         // Loaded on demand when the first street-level image opens.
         'mapillary-js',
       ],

@@ -76,7 +76,7 @@ test('build helper does not discover environment values or construct local provi
     );
     assert.deepEqual(
       config.plugins.slice(3).map((plugin) => plugin.name),
-      ['landing-root', 'embed-framing', 'panel-build'],
+      ['cache-headers', 'landing-root', 'embed-framing', 'panel-build'],
     );
   } finally {
     if (before === undefined) delete process.env.GOOGLE_MAPS_API_KEY;
@@ -89,13 +89,14 @@ test('root config retains existing named exports and standalone provider order',
     assert.equal(compatibility[name], value, name);
   const config = standaloneConfig({ mode: 'test' });
   assert.deepEqual(
-    config.plugins.slice(3, -5).map((plugin) => plugin.name),
+    config.plugins.slice(3, -6).map((plugin) => plugin.name),
     providers.localProviderPlugins().map((plugin) => plugin.name),
   );
-  assert.equal(config.plugins.at(-6).name, 'gev-key-setup');
+  assert.equal(config.plugins.at(-7).name, 'gev-key-setup');
   // The local MCP route follows every provider and precedes the API fallback.
-  assert.equal(config.plugins.at(-5).name, 'local-mcp');
-  assert.equal(config.plugins.at(-4).name, 'api-not-found');
+  assert.equal(config.plugins.at(-6).name, 'local-mcp');
+  assert.equal(config.plugins.at(-5).name, 'api-not-found');
+  assert.equal(config.plugins.at(-4).name, 'cache-headers');
   // Landing routes rewrite before embed framing reads the document URL.
   assert.equal(config.plugins.at(-3).name, 'landing-root');
   assert.equal(config.plugins.at(-2).name, 'embed-framing');
@@ -262,4 +263,40 @@ test('the CSP admits the event media embeds, and no other script origin', async 
   }
   // X posts load in X's own frames.
   assert.ok(frames.includes('https://platform.twitter.com'));
+});
+
+test('preview caches hashed assets for a year and engine files for a day', async () => {
+  const { cacheControlFor, cacheHeadersPlugin } =
+    await import('../../build/cache-headers.js');
+  const year = 'public, max-age=31536000, immutable';
+  assert.equal(cacheControlFor('/assets/index-abc123.js'), year);
+  assert.equal(cacheControlFor('/assets/egm96Grid-x.js?v=1'), year);
+  assert.equal(cacheControlFor('/cesium/Cesium.js'), 'public, max-age=86400');
+  assert.equal(cacheControlFor('/models/b789.glb'), 'public, max-age=86400');
+  for (const url of [
+    '/',
+    '/app',
+    '/app?mode=play',
+    '/landing/index.html',
+    '/api/flights',
+    '/index.html',
+  ])
+    assert.equal(cacheControlFor(url), null, url);
+
+  // sirv sets its own no-cache after this middleware; ours must win.
+  let middleware;
+  cacheHeadersPlugin().configurePreviewServer({
+    middlewares: { use: (fn) => (middleware = fn) },
+  });
+  const headers = {};
+  const res = { setHeader: (k, v) => (headers[k.toLowerCase()] = v) };
+  middleware({ url: '/assets/a.js' }, res, () => {});
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Content-Type', 'text/javascript');
+  assert.equal(headers['cache-control'], year);
+  assert.equal(headers['content-type'], 'text/javascript');
+  const page = { setHeader: (k, v) => (headers[k.toLowerCase()] = v) };
+  middleware({ url: '/app' }, page, () => {});
+  page.setHeader('Cache-Control', 'no-cache');
+  assert.equal(headers['cache-control'], 'no-cache');
 });

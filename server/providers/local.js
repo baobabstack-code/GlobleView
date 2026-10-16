@@ -34,6 +34,26 @@ import { windProxy } from './wind.js';
  * Construct the local provider plugins in their established order.
  * `realtime` configures the voice session token endpoint.
  */
+/**
+ * Opt-in (GEV_WARM_CAMERA_CATALOG=1, set on the hosted server): load the
+ * camera catalog as the server starts, so the first camera or game request
+ * doesn't wait on every provider's list. Off by default, so tests and local
+ * runs never reach out on start.
+ */
+function cameraCatalogWarmup(getCctvSources) {
+  const warm = () => {
+    if (process.env.GEV_WARM_CAMERA_CATALOG !== '1') return;
+    void Promise.resolve()
+      .then(getCctvSources)
+      .catch(() => {});
+  };
+  return {
+    name: 'cctv-catalog-warmup',
+    configureServer: warm,
+    configurePreviewServer: warm,
+  };
+}
+
 function localProviderPlugins({ realtime } = {}) {
   // One camera catalog serves the CCTV layer and the guessing game.
   const getCctvSources = createCctvCatalog({ sourceRoot: defaultSourceRoot });
@@ -52,6 +72,7 @@ function localProviderPlugins({ realtime } = {}) {
     weatherEffectsProxy(),
     cctvProxy({ sourceRoot: defaultSourceRoot, getCctvSources }),
     playProxy({ getSources: getCctvSources }),
+    cameraCatalogWarmup(getCctvSources),
     radioBrowserProxy(),
     gbfsProxy(),
     localReceiversProxy(),

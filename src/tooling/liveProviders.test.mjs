@@ -193,6 +193,86 @@ test('OpenSky global snapshot attempts are time-limited, retried once, then fall
   assert.equal(stalled.response.headers['x-flight-source'], 'adsb.lol');
 });
 
+test('an unreachable OpenSky is skipped for a doubling backoff until it answers', async (t) => {
+  environment(t, {
+    OPENSKY_CLIENT_ID: undefined,
+    OPENSKY_CLIENT_SECRET: undefined,
+    OPENSKY_AUTH_MODE: 'anon',
+    OPENSKY_USERNAME: undefined,
+    OPENSKY_PASSWORD: undefined,
+  });
+  t.mock.method(console, 'warn', () => {});
+  t.mock.method(console, 'error', () => {});
+  let now = Date.now();
+  t.mock.method(Date, 'now', () => now);
+  let reachable = false;
+  let attempts = 0;
+  t.mock.method(globalThis, 'fetch', async (url) => {
+    if (url.includes('/states/')) {
+      attempts += 1;
+      if (!reachable)
+        throw new DOMException(
+          'The operation was aborted due to timeout',
+          'TimeoutError',
+        );
+      // A full credit budget keeps the governor's normal 9 s cache.
+      return Response.json(
+        { time: Math.floor(now / 1000), states: [] },
+        { headers: { 'x-rate-limit-remaining': '4000' } },
+      );
+    }
+    if (url.includes('/lat/'))
+      return Response.json({
+        now: now / 1000,
+        ac: [{ hex: 'abc123', lat: 30, lon: -97, alt_baro: 10000 }],
+      });
+    throw Error(`Unexpected URL: ${url}`);
+  });
+  const fresh = await import(
+    `../../server/providers/aircraft/opensky.js?unreachable=${Math.random()}`
+  );
+  const flights = install(fresh.openSkyProxy());
+  const poll = async () => {
+    const before = attempts;
+    const response = await flights('/api/flights', '?lat=30&lon=-97');
+    return { response, tried: attempts - before };
+  };
+
+  // First failure: two attempts, then the regional fallback.
+  let r = await poll();
+  assert.equal(r.tried, 2);
+  assert.equal(r.response.headers['x-flight-source'], 'adsb.lol');
+
+  // Within the 60 s backoff OpenSky isn't contacted at all.
+  now += 30_000;
+  r = await poll();
+  assert.equal(r.tried, 0);
+  assert.equal(r.response.statusCode, 200);
+  assert.equal(r.response.headers['x-flight-source'], 'adsb.lol');
+  assert.equal(
+    r.response.headers['x-opensky-auth-reason'],
+    'opensky_unreachable_regional_fallback',
+  );
+
+  // After it, one retry; failing again doubles the wait to 120 s.
+  now += 31_000;
+  assert.equal((await poll()).tried, 2);
+  now += 90_000;
+  assert.equal((await poll()).tried, 0);
+  now += 31_000;
+  reachable = true;
+  r = await poll();
+  assert.equal(r.tried, 1);
+  assert.equal(r.response.headers['x-flight-source'], undefined);
+
+  // Success clears the backoff: the next failure waits 60 s again, not 240 s.
+  reachable = false;
+  now += 10_000;
+  assert.equal((await poll()).tried, 2);
+  now += 61_000;
+  assert.equal((await poll()).tried, 2);
+});
+
 test('military aircraft route preserves fresh cache and stale response after upstream failure', async (t) => {
   let now = Date.now();
   let calls = 0;

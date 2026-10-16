@@ -37,6 +37,10 @@ services:
       # Serve the landing page at / and the app at /app.
       - key: GEV_LANDING_ROOT
         value: '1'
+      # Load the camera catalog at start, so the first camera or game
+      # request after a deploy or wake-up doesn't wait on it.
+      - key: GEV_WARM_CAMERA_CATALOG
+        value: '1'
       - key: GEV_RATELIMIT_GOOGLE_PER_MIN
         value: '60'
       - key: GEV_RATELIMIT_OPENAI_PER_MIN
