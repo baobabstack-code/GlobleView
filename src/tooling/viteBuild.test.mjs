@@ -89,13 +89,14 @@ test('root config retains existing named exports and standalone provider order',
     assert.equal(compatibility[name], value, name);
   const config = standaloneConfig({ mode: 'test' });
   assert.deepEqual(
-    config.plugins.slice(3, -6).map((plugin) => plugin.name),
+    config.plugins.slice(3, -7).map((plugin) => plugin.name),
     providers.localProviderPlugins().map((plugin) => plugin.name),
   );
-  assert.equal(config.plugins.at(-7).name, 'gev-key-setup');
+  assert.equal(config.plugins.at(-8).name, 'gev-key-setup');
   // The local MCP route follows every provider and precedes the API fallback.
-  assert.equal(config.plugins.at(-6).name, 'local-mcp');
-  assert.equal(config.plugins.at(-5).name, 'api-not-found');
+  assert.equal(config.plugins.at(-7).name, 'local-mcp');
+  assert.equal(config.plugins.at(-6).name, 'api-not-found');
+  assert.equal(config.plugins.at(-5).name, 'gev-unwatched-runtime-dirs');
   assert.equal(config.plugins.at(-4).name, 'cache-headers');
   // Landing routes rewrite before embed framing reads the document URL.
   assert.equal(config.plugins.at(-3).name, 'landing-root');
@@ -135,6 +136,21 @@ test('landing root is opt-in and keeps application queries on the app', async ()
   middleware(req, {}, () => (called = true));
   assert.equal(req.url, '/index.html?embed=1');
   assert.ok(called);
+});
+
+test('directories the server writes while it runs are kept out of the dev watcher', () => {
+  // Providers write cache files and logs here while the app runs; none of it is
+  // source, so the dev watcher has no reason to stat it.
+  const config = standaloneConfig({ mode: 'test' });
+  const plugin = config.plugins.find(
+    ({ name }) => name === 'gev-unwatched-runtime-dirs',
+  );
+  // Dev only: preview and build have no watcher.
+  assert.equal(plugin.apply, 'serve');
+  assert.deepEqual(plugin.config().server.watch.ignored, [
+    '**/.gev-cache/**',
+    '**/.gev-logs/**',
+  ]);
 });
 
 test('build export resolves in Node and has no browser fallback', async () => {
@@ -220,7 +236,7 @@ test('only embed-mode documents may be framed, and only by the allowed ancestors
   }
 });
 
-test('the CSP admits the event media embeds, and no other script origin', async () => {
+test('the CSP admits the event media embeds and the Maps JavaScript API, and no other script origin', async () => {
   const { embeddedMediaFrameUrl, resolveEmbeddedMediaSource } =
     await import('../../src/data/bhoteKoshiEmbeddedMedia.js');
   const directive = (name) =>
@@ -238,7 +254,8 @@ test('the CSP admits the event media embeds, and no other script origin', async 
     'https://platform.twitter.com',
   ])
     assert.ok(scripts.includes(origin), origin);
-  // Only those three, and never a wildcard or a scheme.
+  // Only those three and Google Street View's Maps JavaScript API, never a
+  // wildcard or a scheme.
   assert.deepEqual(
     scripts.filter(
       (source) => source.startsWith('http') || source === 'https:',
@@ -247,6 +264,7 @@ test('the CSP admits the event media embeds, and no other script origin', async 
       'https://www.youtube.com',
       'https://connect.facebook.net',
       'https://platform.twitter.com',
+      'https://maps.googleapis.com',
     ],
   );
   assert.ok(!scripts.some((source) => source.includes('*')));

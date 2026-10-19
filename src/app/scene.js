@@ -11,6 +11,7 @@ import {
   uninstallRenderGovernor,
   governorRequestRender,
 } from '../renderGovernor.js';
+import { t } from '../i18n/index.js';
 
 /** Construct the application globe using the caller's local configuration. */
 export async function createApplicationScene({
@@ -39,7 +40,7 @@ export async function createApplicationScene({
       else window.__GOOGLE_MAPS_API_KEY__ = previousKey;
     });
   }
-  loaderStatus.textContent = 'Opening the globe...';
+  loaderStatus.textContent = t('Configuring viewer...');
   // Provider attribution stays visible, including clean-view and recording.
   const creditContainer = document.createElement('div');
   creditContainer.id = 'cesium-credits';
@@ -81,8 +82,8 @@ export async function createApplicationScene({
   });
   defer(() => mapStackController.destroy());
   loaderStatus.textContent = canStartPhotoreal
-    ? 'Opening the globe while 3D tiles load...'
-    : 'Opening the keyless globe...';
+    ? t('Opening the globe while 3D tiles load...')
+    : t('Opening the keyless globe...');
   const tilesetReady = mapStackController
     .setStack(initialStack, {
       silent: true,
@@ -96,7 +97,10 @@ export async function createApplicationScene({
           '[Init] Google 3D Tiles unavailable, using the globe imagery:',
           state.lastError,
         );
-        loaderStatus.textContent = `Google 3D Tiles unavailable (${state.lastError}). Loading globe imagery...`;
+        loaderStatus.textContent = t(
+          'Google 3D Tiles unavailable ({detail}). Loading globe imagery...',
+          { detail: state.lastError },
+        );
       }
       return mapStackController.getImageryHostTileset();
     })

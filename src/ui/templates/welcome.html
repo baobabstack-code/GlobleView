@@ -5,23 +5,23 @@
   <aside id="first-run-launcher" role="dialog" aria-labelledby="first-run-title" aria-describedby="first-run-description" hidden>
     <div class="first-run-scanline" aria-hidden="true"></div>
     <header class="first-run-header">
-      <span class="first-run-kicker">MISSION CONTROL · FIRST LAUNCH</span>
+      <span class="first-run-kicker" data-i18n>MISSION CONTROL · FIRST LAUNCH</span>
     </header>
-    <h2 id="first-run-title">Choose your first view</h2>
+    <h2 id="first-run-title" data-i18n>Choose your first view</h2>
     <!-- The card's one persuasive line, owner-authored and VERBATIM (2026-08-23)
          — including the unspaced em dash. The arc it has to carry: this looks
          like something you should not have access to → the sources are all
          public → the data is real. Tile subcopy stays purely functional. -->
-    <p id="first-run-description">It feels like a forbidden cockpit—then you realize the sources are public and the data is real.</p>
+    <p id="first-run-description" data-i18n-runtime>It feels like a forbidden cockpit—then you realize the sources are public and the data is real.</p>
     <div class="first-run-choices">
       <button type="button" data-first-run-choice="contacts">
         <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 12 19 5M12 3v2m9 7h-2M3 12h2m7 9v-2"/><circle cx="17" cy="8" r="1"/></svg>
-        <span><strong>LIVE CONTACTS</strong><small>Aircraft, vessels and nearby intelligence</small></span>
+        <span><strong data-i18n>LIVE CONTACTS</strong><small data-i18n>Aircraft, vessels and nearby intelligence</small></span>
         <svg class="ui-icon first-run-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg>
       </button>
       <button type="button" data-first-run-choice="space-missions">
         <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4c2.7-1.2 5-1 6-1 0 1 .2 3.3-1 6l-5.5 7.5-5-5L14 4Z"/><path d="m8.5 11.5-4 1-2 4 5-1m4 1.5-1 4 4 2 1-5"/><circle cx="15.5" cy="7.5" r="1.2"/><path d="m5 19-2 2"/></svg>
-        <span><strong>SPACE MISSIONS</strong><small>Launches, spacecraft and orbital context</small></span>
+        <span><strong data-i18n>SPACE MISSIONS</strong><small data-i18n>Launches, spacecraft and orbital context</small></span>
         <svg class="ui-icon first-run-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg>
       </button>
       <button type="button" data-first-run-choice="environmental">
@@ -30,23 +30,23 @@
         <!-- Subcopy names BOTH feeds this tile turns on, because the launcher
              optimizes for the fully configured experience (owner ruling,
              2026-08-23) — see the mission table in src/firstRunExperience.js. -->
-        <span><strong data-first-run-environmental-title>ENVIRONMENTAL</strong><small>Live earthquakes and active fires, from USGS and NASA</small></span>
+        <span data-i18n-runtime><strong data-first-run-environmental-title>ENVIRONMENTAL</strong><small data-i18n>Live earthquakes and active fires, from USGS and NASA</small></span>
         <svg class="ui-icon first-run-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg>
       </button>
       <button type="button" class="first-run-explore" data-first-run-choice="explore">
         <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3.5 9h17M3.5 15h17M12 3c2.2 2.4 3.3 5.4 3.3 9s-1.1 6.6-3.3 9c-2.2-2.4-3.3-5.4-3.3-9S9.8 5.4 12 3Z"/></svg>
-        <span><strong>EXPLORE MANUALLY</strong><small>Begin with a clean globe</small></span>
+        <span><strong data-i18n>EXPLORE MANUALLY</strong><small data-i18n>Begin with a clean globe</small></span>
         <svg class="ui-icon first-run-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg>
       </button>
     </div>
     <div class="first-run-footer">
       <label class="first-run-suppress">
         <input type="checkbox" data-first-run-suppress />
-        <span>Don't show this again</span>
+        <span data-i18n>Don't show this again</span>
       </label>
-      <span>ESC to dismiss</span>
+      <span data-i18n>ESC to dismiss</span>
     </div>
     <!-- Kept out of the footer row: it swaps to mission progress and errors, and
          a live region that also holds layout makes the row jump as it speaks. -->
-    <p class="first-run-note" data-first-run-status role="status" aria-live="polite">Tip: the GEV MIC button in the dock lets you talk to the map.</p>
+    <p class="first-run-note" data-first-run-status role="status" aria-live="polite" data-i18n>Tip: the GEV MIC button in the dock lets you talk to the map.</p>
   </aside>
