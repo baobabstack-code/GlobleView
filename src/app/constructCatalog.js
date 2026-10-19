@@ -6,31 +6,11 @@ import { createWindLayer } from '../layers/wind/index.js';
 import { createLayerCatalog } from './catalog.js';
 import { LAYER_STATE_REGISTRY } from '../data/layerState.js';
 import { createMilitaryRegistry } from '../layers/aircraft/classification.js';
-import { createApplicationFlights } from './layers/flights.js';
-import { createApplicationMilitary } from './layers/militaryFlights.js';
-import { createApplicationVessels } from './layers/aisLiveVessels.js';
 import { createApplicationCctv } from './layers/cctv.js';
 import { createApplicationRadio } from './layers/radio.js';
-import { createApplicationTraffic } from './layers/traffic.js';
-import { createApplicationBikeshare } from './layers/bikeshare.js';
-import { createApplicationDirections } from './layers/directions.js';
-import { createApplicationRecentImagery } from './layers/recentImagery.js';
-import { createApplicationTransit } from './layers/transit.js';
-import { createApplicationInstallations } from './layers/militaryInstallations.js';
-import { createApplicationSatellites } from './layers/satellites.js';
-import { createApplicationLaunches } from './layers/rocketLaunches.js';
-import { createApplicationAlpr } from './layers/alprCameras.js';
-import { createApplicationLocalAdsb } from './layers/localAdsb.js';
-import { createApplicationAwareness } from './layers/militaryAwareness.js';
-import { createApplicationFirms } from './layers/firms.js';
-import { createApplicationEarthquakes } from './layers/earthquakes.js';
-import { createApplicationFirePerimeters } from './layers/perimeters.js';
-import { createApplicationCables } from './layers/submarineCables.js';
 import { createApplicationStreetLevel } from './layers/streetLevel.js';
-import { createInfrastructureLayers } from '../data/infrastructure.js';
-import { localGeoJsonServices } from './localGeojsonServices.js';
-import { createBhoteKoshiEventLayer } from '../data/bhoteKoshiEvent.js';
-import { createBhoteKoshiLocatorLayer } from '../data/bhoteKoshiLocator.js';
+import { createApplicationRecentImagery } from './layers/recentImagery.js';
+import { createLazyLayer, ENSURE_LAZY_LAYER } from './lazyLayer.js';
 
 /**
  * Hardware-local layers are registered like any other but never enter share
@@ -46,9 +26,211 @@ export const APPLICATION_LAYER_METADATA = Object.freeze([
   ...LOCAL_ONLY_LAYER_METADATA,
 ]);
 
-/** Construct the current catalog without choosing any source provider.
- * Scene engines remain page-owned; layers and classification have this app's lifetime.
- * The manager owns layer destruction, while abort releases classification even if startup fails.
+const LAYER_ORDER = Object.freeze([
+  'bhote-koshi-2026',
+  'bhote-koshi-locator',
+  'flights',
+  'military',
+  'local-adsb',
+  'earthquakes',
+  'fire-perimeters',
+  'alpr-cameras',
+  'street-level',
+  'satellites',
+  'rocket-launches',
+  'traffic',
+  'cctv',
+  'radio',
+  'transit',
+  'bikeshare',
+  'directions',
+  'recent-imagery',
+  'ais-live-vessels',
+  'military-installations',
+  'military-awareness',
+  'wind',
+  'weather-radar',
+  'weather-satellite',
+  'weather-lightning',
+  'weather-cyclones',
+  'local-datacenters',
+  'local-dams',
+  'telegeography-submarine-cables',
+  'local-firms',
+]);
+
+const LAZY_LAYER_METADATA = Object.freeze([
+  {
+    id: 'bhote-koshi-2026',
+    name: 'Bhote Koshi Flood',
+    icon: '🌊',
+    source: 'Vantor + GeoPera',
+    showInTogglePanel: false,
+    updateInterval: 0,
+  },
+  {
+    id: 'bhote-koshi-locator',
+    name: 'Bhote Koshi Locator',
+    icon: '◎',
+    source: 'OpenStreetMap + GeoPera',
+    showInTogglePanel: false,
+    updateInterval: 0,
+  },
+  {
+    id: 'flights',
+    name: 'Live Flights',
+    icon: '✈️',
+    source: 'Flights',
+    updateInterval: 30_000,
+  },
+  {
+    id: 'military',
+    name: 'Military Flights',
+    icon: '🎖️',
+    source: 'Military aircraft',
+    updateInterval: 15_000,
+  },
+  {
+    id: 'local-adsb',
+    name: 'Local ADS-B',
+    icon: '📡',
+    source: 'RTL-SDR · WebUSB',
+    updateInterval: 0,
+    statsRefreshInterval: 1_000,
+  },
+  {
+    id: 'earthquakes',
+    name: 'Earthquakes (24h)',
+    icon: '🌋',
+    source: 'USGS',
+    updateInterval: 60_000,
+  },
+  {
+    id: 'fire-perimeters',
+    name: 'Fire Perimeters',
+    icon: '🔥',
+    source: 'NIFC WFIGS',
+    updateInterval: 300_000,
+  },
+  {
+    id: 'alpr-cameras',
+    name: 'ALPR Cameras',
+    icon: '📷',
+    source: 'OpenStreetMap · community mapped',
+    updateInterval: 0,
+    statsRefreshInterval: 1_000,
+  },
+  {
+    id: 'satellites',
+    name: 'Satellites',
+    icon: '🛰️',
+    source: 'CelesTrak',
+    updateInterval: 0,
+    refreshInterval: 300_000,
+  },
+  {
+    id: 'rocket-launches',
+    name: 'Space Missions (30d)',
+    icon: '🚀',
+    source: 'Launch Library 2',
+    updateInterval: 300_000,
+  },
+  {
+    id: 'traffic',
+    name: 'Street Traffic',
+    icon: '🚗',
+    source: 'OpenStreetMap / TomTom',
+    updateInterval: 0,
+  },
+  {
+    id: 'transit',
+    name: 'Transit',
+    icon: '🚌',
+    source: 'GTFS-RT',
+    updateInterval: 15_000,
+  },
+  {
+    id: 'bikeshare',
+    name: 'Bikeshare',
+    icon: '🚲',
+    source: 'GBFS',
+    updateInterval: 60_000,
+  },
+  {
+    id: 'directions',
+    name: 'Directions',
+    icon: '🧭',
+    source: 'OSM routing',
+    updateInterval: 0,
+  },
+  {
+    id: 'ais-live-vessels',
+    name: 'Live AIS Vessels',
+    icon: '◭',
+    source: 'Vessels',
+    updateInterval: 60_000,
+    statsRefreshInterval: 1_000,
+  },
+  {
+    id: 'military-installations',
+    name: 'Mapped Installations',
+    icon: '⌖',
+    source: 'OpenStreetMap + optional Google Maps Places',
+    updateInterval: 0,
+    statsRefreshInterval: 1_000,
+  },
+  {
+    id: 'military-awareness',
+    name: 'Global Context',
+    icon: '◎',
+    source: 'Open-source proximity context',
+    showInTogglePanel: false,
+    updateInterval: 0,
+    statsRefreshInterval: 1_000,
+  },
+  { id: 'local-datacenters', name: 'Datacenters', icon: '▣', source: 'Local' },
+  { id: 'local-dams', name: 'Dams', icon: '▰', source: 'USACE' },
+  {
+    id: 'telegeography-submarine-cables',
+    name: 'Submarine Cables',
+    icon: '≋',
+    source: 'TeleGeography',
+    updateInterval: 0,
+    statsRefreshInterval: 500,
+  },
+  {
+    id: 'local-firms',
+    name: 'FIRMS Active Fires',
+    icon: '▲',
+    source: 'NASA FIRMS · LIVE',
+    updateInterval: 600_000,
+    requiresKeyId: 'firms',
+  },
+]);
+
+const EMPTY = () => undefined;
+const EMPTY_FALSE = () => false;
+const EMPTY_NULL = () => null;
+const LAZY_LAYER_FALLBACKS = Object.freeze({
+  beginWorldJump: EMPTY,
+  cancelPendingRestore: EMPTY,
+  cancelPendingTrackingRestore: EMPTY,
+  clearSelection: EMPTY,
+  endWorldJump: EMPTY,
+  focusTarget: EMPTY,
+  getContextSnapshot: EMPTY_NULL,
+  getTrackedInfo: EMPTY_NULL,
+  navigateNext: EMPTY_FALSE,
+  refocusTrackedById: EMPTY_FALSE,
+  releaseCameraOwnership: EMPTY,
+  stopTracking: EMPTY,
+});
+
+/**
+ * Construct the current catalog without choosing any source provider.
+ * High weight overlays are represented by synchronous metadata first, then
+ * their implementation is imported on first activation. Scene-owned layers
+ * and classification still live for the lifetime of this application.
  */
 export function createApplicationCatalog({
   surface,
@@ -76,103 +258,329 @@ export function createApplicationCatalog({
     weatherClock.destroy();
   };
   signal.addEventListener('abort', dispose, { once: true });
+
   try {
     if (sourceComposition.isConfigured('military'))
       militaryRegistry.configureSource(sources.military, { signal });
-    const flights = createApplicationFlights({
-      surface,
-      source: sources.flights,
-      militaryRegistry,
-      resolveAsset,
-    });
-    const military = createApplicationMilitary({
-      surface,
-      source: sources.military,
-      militaryRegistry,
-      resolveAsset,
-    });
-    const vessels = createApplicationVessels({
-      source: sources.vessels,
-      options: vesselOptions,
-    });
-    const installations = createApplicationInstallations({
-      surface,
-      source: sources.installations,
-    });
-    const satellites = createApplicationSatellites({
-      source: sources.satellites,
-    });
-    const catalog = createLayerCatalog(
+
+    // These implementations are small or expose synchronous controls read
+    // during shell construction. The costly overlay families below are lazy.
+    const eager = new Map([
       [
-        createBhoteKoshiEventLayer(),
-        createBhoteKoshiLocatorLayer({
-          boundaryResolver: nepalBoundaryResolver,
-        }),
-        flights,
-        military,
-        createApplicationLocalAdsb({
-          surface,
-          enrichment: sources.flights,
-          displayParams: () => flights.getParams(),
-          ...(resolveAsset ? { resolveAsset } : {}),
-        }),
-        createApplicationEarthquakes({ source: sources.earthquakes }),
-        createApplicationFirePerimeters({
-          source: sources['fire-perimeters'],
-        }),
-        createApplicationAlpr({ surface, source: sources.alpr }),
+        'street-level',
         createApplicationStreetLevel({
           surface,
           sources: { mapillary: sources.mapillary },
           providers: streetLevelProviders,
         }),
-        satellites,
-        createApplicationLaunches({ source: sources.launches, satellites }),
-        createApplicationTraffic({ source: sources.traffic, surface }),
-        createApplicationCctv({ surface, source: sources.cctv }),
-        createApplicationRadio({ surface, source: sources.radio }),
-        createApplicationTransit({ surface, source: sources.transit }),
-        createApplicationBikeshare({ source: sources.bikeshare }),
-        createApplicationDirections({ source: sources.directions }),
+      ],
+      ['cctv', createApplicationCctv({ surface, source: sources.cctv })],
+      ['radio', createApplicationRadio({ surface, source: sources.radio })],
+      [
+        'recent-imagery',
         createApplicationRecentImagery({ source: sources['recent-imagery'] }),
-        vessels,
-        installations,
-        createApplicationAwareness({
-          flights,
-          military,
-          vessels,
-          installations,
-        }),
-        createWindLayer({ feed: sources.wind, clock: weatherClock }),
+      ],
+      ['wind', createWindLayer({ feed: sources.wind, clock: weatherClock })],
+      [
+        'weather-radar',
         createWeatherLayer({
           feed: sources.weather,
           id: 'weather-radar',
           clock: weatherClock,
         }),
+      ],
+      [
+        'weather-satellite',
         createWeatherLayer({
           feed: sources.weather,
           id: 'weather-satellite',
           clock: weatherClock,
         }),
+      ],
+      [
+        'weather-lightning',
         createWeatherLayer({
           feed: sources.weather,
           id: 'weather-lightning',
           clock: weatherClock,
         }),
-        createCyclonesLayer({ feed: sources.cyclones }),
-        ...createInfrastructureLayers(localGeoJsonServices),
-        createApplicationCables({ source: sources.cables }),
-        createApplicationFirms({
-          surface,
-          id: 'local-firms',
-          name: 'FIRMS Active Fires',
-          icon: '▲',
-          source: 'NASA FIRMS · LIVE',
-          feed: sources.firms,
-        }),
       ],
-      metadata,
-    );
+      ['weather-cyclones', createCyclonesLayer({ feed: sources.cyclones })],
+    ]);
+
+    const lazyById = new Map();
+    const ensureLazy = async (id) => {
+      const layer = lazyById.get(id);
+      if (!layer) return eager.get(id);
+      return layer[ENSURE_LAZY_LAYER]();
+    };
+
+    let infrastructurePromise;
+    const loadInfrastructure = () => {
+      infrastructurePromise ||= Promise.all([
+        import('../data/infrastructure.js'),
+        import('./localGeojsonServices.js'),
+      ]).then(([infrastructure, local]) =>
+        infrastructure.createInfrastructureLayers(local.localGeoJsonServices),
+      );
+      infrastructurePromise.catch(() => {
+        infrastructurePromise = null;
+      });
+      return infrastructurePromise;
+    };
+
+    const definitions = [
+      {
+        metadata: LAZY_LAYER_METADATA.find(
+          ({ id }) => id === 'bhote-koshi-2026',
+        ),
+        load: async () =>
+          (
+            await import('../data/bhoteKoshiEvent.js')
+          ).createBhoteKoshiEventLayer(),
+      },
+      {
+        metadata: LAZY_LAYER_METADATA.find(
+          ({ id }) => id === 'bhote-koshi-locator',
+        ),
+        supportsRowControls: true,
+        load: async () =>
+          (
+            await import('../data/bhoteKoshiLocator.js')
+          ).createBhoteKoshiLocatorLayer({
+            boundaryResolver: nepalBoundaryResolver,
+          }),
+      },
+      {
+        metadata: LAZY_LAYER_METADATA.find(({ id }) => id === 'flights'),
+        load: async () => {
+          const { createApplicationFlights } =
+            await import('./layers/flights.js');
+          return createApplicationFlights({
+            surface,
+            source: sources.flights,
+            militaryRegistry,
+            resolveAsset,
+          });
+        },
+      },
+      {
+        metadata: LAZY_LAYER_METADATA.find(({ id }) => id === 'military'),
+        load: async () => {
+          const { createApplicationMilitary } =
+            await import('./layers/militaryFlights.js');
+          return createApplicationMilitary({
+            surface,
+            source: sources.military,
+            militaryRegistry,
+            resolveAsset,
+          });
+        },
+      },
+      {
+        metadata: LAZY_LAYER_METADATA.find(({ id }) => id === 'local-adsb'),
+        load: async () => {
+          const [flights, { createApplicationLocalAdsb }] = await Promise.all([
+            ensureLazy('flights'),
+            import('./layers/localAdsb.js'),
+          ]);
+          return createApplicationLocalAdsb({
+            surface,
+            enrichment: sources.flights,
+            displayParams: () => flights.getParams(),
+            ...(resolveAsset ? { resolveAsset } : {}),
+          });
+        },
+      },
+      {
+        metadata: LAZY_LAYER_METADATA.find(({ id }) => id === 'earthquakes'),
+        load: async () =>
+          (
+            await import('./layers/earthquakes.js')
+          ).createApplicationEarthquakes({
+            source: sources.earthquakes,
+          }),
+      },
+      {
+        metadata: LAZY_LAYER_METADATA.find(
+          ({ id }) => id === 'fire-perimeters',
+        ),
+        supportsRowControls: true,
+        load: async () =>
+          (
+            await import('./layers/perimeters.js')
+          ).createApplicationFirePerimeters({
+            source: sources['fire-perimeters'],
+          }),
+      },
+      {
+        metadata: LAZY_LAYER_METADATA.find(({ id }) => id === 'alpr-cameras'),
+        supportsRowControls: true,
+        load: async () =>
+          (await import('./layers/alprCameras.js')).createApplicationAlpr({
+            surface,
+            source: sources.alpr,
+          }),
+      },
+      {
+        metadata: LAZY_LAYER_METADATA.find(({ id }) => id === 'satellites'),
+        supportsRowControls: true,
+        load: async () =>
+          (await import('./layers/satellites.js')).createApplicationSatellites({
+            source: sources.satellites,
+          }),
+      },
+      {
+        metadata: LAZY_LAYER_METADATA.find(
+          ({ id }) => id === 'rocket-launches',
+        ),
+        load: async () => {
+          const [satellites, { createApplicationLaunches }] = await Promise.all(
+            [ensureLazy('satellites'), import('./layers/rocketLaunches.js')],
+          );
+          return createApplicationLaunches({
+            source: sources.launches,
+            satellites,
+          });
+        },
+      },
+      {
+        metadata: LAZY_LAYER_METADATA.find(({ id }) => id === 'traffic'),
+        supportsRowControls: true,
+        load: async () =>
+          (await import('./layers/traffic.js')).createApplicationTraffic({
+            source: sources.traffic,
+            surface,
+          }),
+      },
+      {
+        metadata: LAZY_LAYER_METADATA.find(({ id }) => id === 'transit'),
+        load: async () =>
+          (await import('./layers/transit.js')).createApplicationTransit({
+            surface,
+            source: sources.transit,
+          }),
+      },
+      {
+        metadata: LAZY_LAYER_METADATA.find(({ id }) => id === 'bikeshare'),
+        load: async () =>
+          (await import('./layers/bikeshare.js')).createApplicationBikeshare({
+            source: sources.bikeshare,
+          }),
+      },
+      {
+        metadata: LAZY_LAYER_METADATA.find(({ id }) => id === 'directions'),
+        supportsRowControls: true,
+        load: async () =>
+          (await import('./layers/directions.js')).createApplicationDirections({
+            source: sources.directions,
+          }),
+      },
+      {
+        metadata: LAZY_LAYER_METADATA.find(
+          ({ id }) => id === 'ais-live-vessels',
+        ),
+        load: async () =>
+          (await import('./layers/aisLiveVessels.js')).createApplicationVessels(
+            {
+              source: sources.vessels,
+              options: vesselOptions,
+            },
+          ),
+      },
+      {
+        metadata: LAZY_LAYER_METADATA.find(
+          ({ id }) => id === 'military-installations',
+        ),
+        load: async () =>
+          (
+            await import('./layers/militaryInstallations.js')
+          ).createApplicationInstallations({
+            surface,
+            source: sources.installations,
+          }),
+      },
+      {
+        metadata: LAZY_LAYER_METADATA.find(
+          ({ id }) => id === 'military-awareness',
+        ),
+        load: async () => {
+          const [
+            flights,
+            military,
+            vessels,
+            installations,
+            { createApplicationAwareness },
+          ] = await Promise.all([
+            ensureLazy('flights'),
+            ensureLazy('military'),
+            ensureLazy('ais-live-vessels'),
+            ensureLazy('military-installations'),
+            import('./layers/militaryAwareness.js'),
+          ]);
+          return createApplicationAwareness({
+            flights,
+            military,
+            vessels,
+            installations,
+          });
+        },
+      },
+      {
+        metadata: LAZY_LAYER_METADATA.find(
+          ({ id }) => id === 'local-datacenters',
+        ),
+        load: async () =>
+          (await loadInfrastructure()).find(
+            ({ id }) => id === 'local-datacenters',
+          ),
+      },
+      {
+        metadata: LAZY_LAYER_METADATA.find(({ id }) => id === 'local-dams'),
+        load: async () =>
+          (await loadInfrastructure()).find(({ id }) => id === 'local-dams'),
+      },
+      {
+        metadata: LAZY_LAYER_METADATA.find(
+          ({ id }) => id === 'telegeography-submarine-cables',
+        ),
+        load: async () =>
+          (await import('./layers/submarineCables.js')).createApplicationCables(
+            {
+              source: sources.cables,
+            },
+          ),
+      },
+      {
+        metadata: LAZY_LAYER_METADATA.find(({ id }) => id === 'local-firms'),
+        load: async () =>
+          (await import('./layers/firms.js')).createApplicationFirms({
+            surface,
+            id: 'local-firms',
+            name: 'FIRMS Active Fires',
+            icon: '▲',
+            source: 'NASA FIRMS · LIVE',
+            feed: sources.firms,
+          }),
+      },
+    ];
+
+    for (const definition of definitions) {
+      const layer = createLazyLayer({
+        metadata: definition.metadata,
+        load: definition.load,
+        fallbacks: LAZY_LAYER_FALLBACKS,
+        supportsRowControls: definition.supportsRowControls,
+      });
+      lazyById.set(definition.metadata.id, layer);
+    }
+
+    const layers = LAYER_ORDER.map((id) => {
+      const layer = eager.get(id) || lazyById.get(id);
+      if (!layer) throw new Error(`Application layer is not configured: ${id}`);
+      return layer;
+    });
+    const catalog = createLayerCatalog(layers, metadata);
     return Object.freeze({
       ...catalog,
       getSourceAvailability: sourceComposition.createAvailabilityLookup(

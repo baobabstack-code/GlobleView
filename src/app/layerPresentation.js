@@ -53,9 +53,14 @@ export class LayerPresentation {
             return null;
           }
         },
-        hasRowControls: (id) =>
-          typeof this.manager.layers.get(id)?.module?.getRowControls ===
-          'function',
+        hasRowControls: (id) => {
+          const module = this.manager.layers.get(id)?.module;
+          return (
+            module?.supportsRowControls?.() === true ||
+            (module?.isLoaded?.() !== false &&
+              typeof module?.getRowControls === 'function')
+          );
+        },
         subscribeRowControls: (id, listener) => {
           const module = this.manager.layers.get(id)?.module;
           module?.setRowControlsListener?.(listener);

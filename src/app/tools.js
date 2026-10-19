@@ -1,9 +1,7 @@
-import { SceneDirector } from '../scenes/director.js';
 import { initAnnotations } from '../annotations/index.js';
 import { initDrawTool } from '../annotations/drawTool.js';
 import { initImageryBoxTool } from '../ui/imageryBoxTool.js';
 import { createRecentImageryPanel } from '../ui/recentImagery.js';
-import { initGevVoiceCommands } from '../voice/gevRealtime.js';
 import { installViews, isEmbeddedInline } from './embed.js';
 import { isPlayMode } from '../play/mode.js';
 import { installPlayMode } from '../ui/play.js';
@@ -15,6 +13,8 @@ import {
   holdContinuousRender,
   releaseContinuousRender,
 } from '../renderGovernor.js';
+import { createLazySceneDirector } from './lazySceneDirector.js';
+import { createLazyVoiceCommands } from './lazyVoiceCommands.js';
 
 /** Attach scene tools, rendering listeners and the application debug handle. */
 export function createApplicationTools({
@@ -33,16 +33,20 @@ export function createApplicationTools({
   const { viewer, tileset, mapStackController, operations } = scene;
   const { styleManager, weatherEffects, cockpitCloudEffects } = controls;
   const { dataManager } = data;
-  const sceneDirector = new SceneDirector(viewer, styleManager, dataManager, {
+  const sceneDirector = createLazySceneDirector({
+    viewer,
+    styleManager,
+    dataManager,
     dataPacks: sceneDataPacks,
     isMapStackAvailable: (id) =>
       mapStackController?.isStackAvailable(id) === true,
+    signal,
+    onSceneDirector,
   });
   dataManager.layers
     .get('bhote-koshi-2026')
     ?.module.attachSceneController(sceneDirector);
   defer(() => sceneDirector.destroy());
-  onSceneDirector?.(sceneDirector);
   const annotations = initAnnotations({
     viewer,
     tileset,
@@ -162,7 +166,7 @@ export function createApplicationTools({
   defer(() => {
     if (window.__godsEyeView === debug) delete window.__godsEyeView;
   });
-  const voiceCommands = initGevVoiceCommands({
+  const voiceCommands = createLazyVoiceCommands({
     ...voice,
     floorServices: operations.surface.groundFloor,
     annotationResolver: operations.annotationResolver,

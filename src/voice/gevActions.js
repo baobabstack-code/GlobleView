@@ -1416,7 +1416,7 @@ export function normalizeStackId(value) {
  * Voice scene playback control. Playback is fire-and-forget: startScene
  * sequences shots for minutes and must not block the realtime tool loop.
  */
-function controlScene(sceneDirector, args = {}) {
+async function controlScene(sceneDirector, args = {}) {
   if (!sceneDirector) {
     return {
       ok: false,
@@ -1424,33 +1424,37 @@ function controlScene(sceneDirector, args = {}) {
       error: 'Scene director unavailable',
     };
   }
+  const director =
+    typeof sceneDirector.ready === 'function'
+      ? await sceneDirector.ready()
+      : sceneDirector;
   const sceneAction = String(args.action || '').toLowerCase();
 
   if (sceneAction === 'list') {
     return {
       ok: true,
       action: 'control_scene',
-      scenes: sceneDirector.listScenes(),
-      ...sceneDirector.getPlaybackStatus(),
+      scenes: director.listScenes(),
+      ...director.getPlaybackStatus(),
     };
   }
   if (sceneAction === 'status') {
     return {
       ok: true,
       action: 'control_scene',
-      ...sceneDirector.getPlaybackStatus(),
+      ...director.getPlaybackStatus(),
     };
   }
   if (sceneAction === 'stop') {
-    sceneDirector.stopScene('Stopped by voice');
+    director.stopScene('Stopped by voice');
     return { ok: true, action: 'control_scene', running: false };
   }
   if (sceneAction === 'next') {
-    sceneDirector.runNextScene();
+    director.runNextScene();
     return { ok: true, action: 'control_scene', advanced: true };
   }
   if (sceneAction === 'play') {
-    if (sceneDirector.running) {
+    if (director.running) {
       return {
         ok: false,
         action: 'control_scene',
@@ -1458,17 +1462,17 @@ function controlScene(sceneDirector, args = {}) {
       };
     }
     const scene = args.sceneId
-      ? sceneDirector.findSceneByQuery(args.sceneId)
-      : sceneDirector.listScenes()[0] || null;
+      ? director.findSceneByQuery(args.sceneId)
+      : director.listScenes()[0] || null;
     if (!scene) {
       return {
         ok: false,
         action: 'control_scene',
         error: `No scene matched "${args.sceneId || ''}"`,
-        scenes: sceneDirector.listScenes(),
+        scenes: director.listScenes(),
       };
     }
-    void sceneDirector.startScene(scene.id, { single: true });
+    void director.startScene(scene.id, { single: true });
     return {
       ok: true,
       action: 'control_scene',
