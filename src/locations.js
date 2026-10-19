@@ -2,10 +2,13 @@ import { isUnavailableCapability } from './sources/capability.js';
 import { createOverpassFeatureSource } from './sources/overpassFeatures.js';
 import { applicationServices } from './services/application.js';
 import * as Cesium from 'cesium';
-import {
-  viewportBias,
-  placesNearViewRecovery,
-} from './annotations/annotationResolver.js';
+import { viewportBias } from './annotations/annotationView.js';
+
+function placesNearViewRecovery(...args) {
+  return import('./annotations/annotationResolver.js').then((resolver) =>
+    resolver.placesNearViewRecovery(...args),
+  );
+}
 import { unavailablePlaceSearch } from './search/placeSearch.js';
 import { cancelCameraArrival } from './data/cameraArrival.js';
 import { guardCameraAboveGround } from './cameraGroundGuard.js';

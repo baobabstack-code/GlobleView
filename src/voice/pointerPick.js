@@ -1,7 +1,7 @@
 import * as Cesium from 'cesium';
 import { resolvePickedContext } from '../data/pickedContext.js';
 import { cameraPoseKey } from './pointerContext.js';
-import * as defaultAnnotationResolver from '../annotations/annotationResolver.js';
+import { pickWorldFromScreen as defaultPickWorldFromScreen } from '../annotations/annotationView.js';
 
 /** "Around here" radius as a share of camera height, clamped to sane bounds. */
 export function pointerRadiusKm(cameraHeightM) {
@@ -23,7 +23,7 @@ export function pointerRadiusKm(cameraHeightM) {
 export function createPointerPicker({
   viewer,
   dataManager = null,
-  pickWorldFromScreen = defaultAnnotationResolver.pickWorldFromScreen,
+  pickWorldFromScreen = defaultPickWorldFromScreen,
 }) {
   return function pickPointer(x, y) {
     const scene = viewer?.scene;

@@ -5,12 +5,13 @@ import {
   holdContinuousRender,
   releaseContinuousRender,
 } from '../renderGovernor.js';
-import {
-  isRateLimitedOutcome,
-  resolveAnnotationTarget,
-  sampleGroundHeight,
-} from './annotationResolver.js';
+import { isRateLimitedOutcome, sampleGroundHeight } from './annotationView.js';
 import { ringCentroid } from './drawMode.js';
+
+async function resolveDefaultAnnotationTarget(...args) {
+  const { resolveAnnotationTarget } = await import('./annotationResolver.js');
+  return resolveAnnotationTarget(...args);
+}
 
 // Dev convenience: expose the app's Cesium instance for console/preview probing
 // (single shared module instance — avoids dual-Cesium state bugs when testing).
@@ -123,7 +124,7 @@ export function createAnnotationEngine({
   viewer,
   renderer,
   outlineRetryDelaysMs = OUTLINE_RETRY_DELAYS_MS,
-  resolveTarget = resolveAnnotationTarget,
+  resolveTarget = resolveDefaultAnnotationTarget,
 }) {
   /** @type {Map<string, object>} live annotations keyed by id */
   const annotations = new Map();

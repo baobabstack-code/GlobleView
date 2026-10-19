@@ -4,7 +4,6 @@ import { initImageryBoxTool } from '../ui/imageryBoxTool.js';
 import { createRecentImageryPanel } from '../ui/recentImagery.js';
 import { installViews, isEmbeddedInline } from './embed.js';
 import { isPlayMode } from '../play/mode.js';
-import { installPlayMode } from '../ui/play.js';
 import { installScopeMask, destroyScopeMask } from '../scopeMask.js';
 import {
   installRenderGovernor,
@@ -17,7 +16,7 @@ import { createLazySceneDirector } from './lazySceneDirector.js';
 import { createLazyVoiceCommands } from './lazyVoiceCommands.js';
 
 /** Attach scene tools, rendering listeners and the application debug handle. */
-export function createApplicationTools({
+export async function createApplicationTools({
   scene,
   controls,
   data,
@@ -33,6 +32,8 @@ export function createApplicationTools({
   const { viewer, tileset, mapStackController, operations } = scene;
   const { styleManager, weatherEffects, cockpitCloudEffects } = controls;
   const { dataManager } = data;
+  const activeTileset =
+    mapStackController.getImageryHostTileset() || tileset || null;
   const sceneDirector = createLazySceneDirector({
     viewer,
     styleManager,
@@ -49,7 +50,7 @@ export function createApplicationTools({
   defer(() => sceneDirector.destroy());
   const annotations = initAnnotations({
     viewer,
-    tileset,
+    tileset: activeTileset,
     placeSearch,
     resolver: operations.annotationResolver,
   });
@@ -67,7 +68,14 @@ export function createApplicationTools({
   // lifetime. The tileset lets the layer drape while the globe is hidden.
   const recentImagery = dataManager.layers.get('recent-imagery')?.module;
   if (recentImagery) {
-    recentImagery.attachTileset(tileset);
+    const syncRecentImageryTileset = () =>
+      recentImagery.attachTileset(
+        mapStackController.getImageryHostTileset() || tileset || null,
+      );
+    const removeMapStackTilesetListener = mapStackController.subscribe(
+      syncRecentImageryTileset,
+    );
+    syncRecentImageryTileset();
     const imageryBoxTool = initImageryBoxTool({
       viewer,
       onBox: (box) => recentImagery.setBox(box),
@@ -95,6 +103,8 @@ export function createApplicationTools({
     defer(() => {
       if (window.__gevRecentImagery === recentImageryHandle)
         delete window.__gevRecentImagery;
+      removeMapStackTilesetListener?.();
+      recentImagery.attachTileset(null);
       data.presentation.attachRecentImagery(null);
       imageryBoxTool?.destroy();
     });
@@ -148,10 +158,12 @@ export function createApplicationTools({
   // loop burning behind a hidden tab. (perf wave 2 fix)
   syncVisibilitySuspension();
 
-  window.__godsEyeView = {
+  const debug = {
     viewer,
     styleManager,
-    tileset,
+    get tileset() {
+      return mapStackController.getImageryHostTileset() || tileset || null;
+    },
     dataManager,
     sceneDirector,
     mapStackController,
@@ -162,7 +174,7 @@ export function createApplicationTools({
     surfaceServices: operations.surface,
     requestRender: governorRequestRender,
   };
-  const debug = window.__godsEyeView;
+  window.__godsEyeView = debug;
   defer(() => {
     if (window.__godsEyeView === debug) delete window.__godsEyeView;
   });
@@ -194,9 +206,12 @@ export function createApplicationTools({
       signal,
     }),
   );
-  if (isPlayMode())
+  if (isPlayMode()) {
+    const { installPlayMode } = await import('../ui/play.js');
+    signal.throwIfAborted();
     defer(
       installPlayMode({ shell: styleManager, viewer, annotations, signal }),
     );
+  }
   return { sceneDirector, annotations, voiceCommands };
 }

@@ -26,7 +26,12 @@ import {
   US_CENSUS_CREDIT,
 } from '../data/dataCredits.js';
 import { unavailablePlaceSearch } from '../search/placeSearch.js';
-import { isPickedWorldPosition } from '../data/scenePick.js';
+import {
+  isRateLimitedOutcome,
+  pickWorldFromScreen,
+  sampleGroundHeight,
+  viewportBias,
+} from './annotationView.js';
 
 /** Ms the analyst region lookup waits on geocode + admin boundary. */
 export const REGION_FALLBACK_BUDGET_MS = 3_000;
@@ -1097,11 +1102,6 @@ export function createAnnotationResolver({
     return scope;
   }
 
-  /** A distinct Overpass throttle result that must not enter the ordinary transient ladder. */
-  function isRateLimitedOutcome(value) {
-    return value?.rateLimited === true;
-  }
-
   /**
    * Resolve an administrative boundary (country/state/county/city/neighborhood).
    * `is_in(point)` returns every admin area containing the point at all levels;
@@ -1845,22 +1845,6 @@ export function createAnnotationResolver({
     }
   }
 
-  /** Exported for searchAndFlyTo (src/locations.js), which shares this bias. */
-  function viewportBias(viewer) {
-    try {
-      const rect = viewer?.camera?.computeViewRectangle?.();
-      if (!rect) return null;
-      const swLat = Cesium.Math.toDegrees(rect.south).toFixed(4);
-      const swLng = Cesium.Math.toDegrees(rect.west).toFixed(4);
-      const neLat = Cesium.Math.toDegrees(rect.north).toFixed(4);
-      const neLng = Cesium.Math.toDegrees(rect.east).toFixed(4);
-      if ([swLat, swLng, neLat, neLng].some((v) => v === 'NaN')) return null;
-      return `${swLat},${swLng}|${neLat},${neLng}`;
-    } catch {
-      return null;
-    }
-  }
-
   /**
    * View-biased Places recovery for a NAME whose geocode missed or landed implausibly
    * far from what the user is looking at — the searchAndFlyTo twin of the recovery
@@ -1896,104 +1880,6 @@ export function createAnnotationResolver({
       placeSearch,
     );
     return hit && hit.distanceM <= PLACES_MAX_DISTANCE_M ? hit : null;
-  }
-
-  /**
-   * Convert a NORMALIZED screen point (x,y in [0,1] of the current viewport) into
-   * a world lon/lat using the depth-aware pick cascade — the inverse of the
-   * project-to-screen used by the renderers. This is the "point at the pixel"
-   * fallback: the agent indicates a spot in the viewport screenshot when it can't
-   * name the place, and we anchor the mark to the actual world point under it.
-   */
-  function pickWorldFromScreen(viewer, nx, ny) {
-    const scene = viewer?.scene;
-    if (!scene) return null;
-    const canvas = scene.canvas;
-    const w = canvas.clientWidth || canvas.width || 0;
-    const h = canvas.clientHeight || canvas.height || 0;
-    if (!w || !h) return null;
-    const px = Math.max(0, Math.min(1, nx)) * w;
-    const py = Math.max(0, Math.min(1, ny)) * h;
-    const pos = new Cesium.Cartesian2(px, py);
-
-    // Each stage is validated before it is accepted: a depth pick over empty sky
-    // can return a NaN or centre-of-the-earth Cartesian, and converting one of
-    // those throws inside Cesium. A degenerate pick IS a missed pick, so it falls
-    // through to the next stage and ultimately to the caller's null.
-    let cart = null;
-    if (
-      scene.pickPositionSupported &&
-      typeof scene.pickPosition === 'function'
-    ) {
-      try {
-        cart = scene.pickPosition(pos);
-      } catch {
-        cart = null;
-      }
-    }
-    if (
-      !isPickedWorldPosition(cart) &&
-      typeof viewer.camera.pickEllipsoid === 'function'
-    ) {
-      try {
-        cart = viewer.camera.pickEllipsoid(pos, Cesium.Ellipsoid.WGS84);
-      } catch {
-        cart = null;
-      }
-    }
-    if (
-      !isPickedWorldPosition(cart) &&
-      typeof viewer.camera.getPickRay === 'function'
-    ) {
-      try {
-        const ray = viewer.camera.getPickRay(pos);
-        cart = ray ? scene.globe?.pick(ray, scene) || null : null;
-      } catch {
-        cart = null;
-      }
-    }
-    if (!isPickedWorldPosition(cart)) return null;
-    const carto = Cesium.Cartographic.fromCartesian(cart);
-    if (!carto) return null;
-    return {
-      lat: Cesium.Math.toDegrees(carto.latitude),
-      lon: Cesium.Math.toDegrees(carto.longitude),
-      // The height the pick actually landed on — a roof, a hillside, or 0 on
-      // the ellipsoid. Callers that only want a coordinate ignore it; the draw
-      // tool's live preview needs it, or the rubber band sinks to sea level
-      // while the pointer is on a hill.
-      height: Number.isFinite(carto.height) ? carto.height : 0,
-    };
-  }
-
-  /**
-   * Best-effort ground height at a coordinate. The Cesium globe is hidden behind
-   * the Google 3D tiles, so we try to clamp onto the photoreal tile surface; if
-   * the tiles for that spot aren't loaded we fall back to the ellipsoid (0).
-   */
-  function sampleGroundHeight(viewer, lon, lat) {
-    const scene = viewer?.scene;
-    if (!scene) return 0;
-    try {
-      if (
-        scene.clampToHeightSupported &&
-        typeof scene.clampToHeight === 'function'
-      ) {
-        const carto = Cesium.Cartographic.fromDegrees(lon, lat);
-        const surface = Cesium.Cartographic.toCartesian(carto);
-        const clamped = scene.clampToHeight(surface);
-        if (clamped) {
-          const h = Cesium.Cartographic.fromCartesian(clamped).height;
-          if (Number.isFinite(h)) return h;
-        }
-      }
-    } catch {
-      /* tiles not ready — fall through */
-    }
-    const globeHeight = scene.globe?.getHeight?.(
-      Cesium.Cartographic.fromDegrees(lon, lat),
-    );
-    return Number.isFinite(globeHeight) && globeHeight > 0 ? globeHeight : 0;
   }
 
   function shortLabel(formattedAddress) {

@@ -30,7 +30,7 @@
  * at finish, deliberately and in one place — see `finishSpec` in drawMode.js.
  */
 import * as Cesium from 'cesium';
-import { pickWorldFromScreen } from './annotationResolver.js';
+import { pickWorldFromScreen } from './annotationView.js';
 import {
   claimPointer,
   pointerOwner,

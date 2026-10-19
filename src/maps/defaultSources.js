@@ -1,5 +1,7 @@
+import * as Cesium from 'cesium';
 import { MAP_STACKS } from './catalog.js';
 import { photorealUnavailableReason } from './availability.js';
+import { loadPhotorealisticTileset } from './google3d.js';
 import { keySetupRequirement } from '../keySetupCore.mjs';
 import {
   createOsmImagery,
@@ -12,12 +14,18 @@ import { createWorldTerrain, createKeylessTerrain } from './terrain.js';
 /** Select sources and setup guidance without putting provider branches in the controller. */
 export function createDefaultMapSources({
   googleTileset = null,
+  googleTokens = null,
+  lazyPhotorealistic = false,
   cesiumToken = '',
   googleApiKey = '',
 } = {}) {
   const ionToken = String(cesiumToken || '').trim();
   const hasIon = Boolean(ionToken);
   const hasGoogle = Boolean(String(googleApiKey || '').trim());
+  const canLoadPhotorealistic = Boolean(
+    googleTileset ||
+    (lazyPhotorealistic && (hasIon || hasGoogle || googleTokens)),
+  );
   const terrain = {
     id: hasIon ? 'world' : 'keyless',
     create: hasIon
@@ -25,9 +33,13 @@ export function createDefaultMapSources({
       : createKeylessTerrain,
   };
   return {
-    defaultId: googleTileset ? 'photoreal' : 'esri-imagery',
+    defaultId: canLoadPhotorealistic ? 'photoreal' : 'esri-imagery',
     unknownId: 'photoreal',
-    recoveryId: googleTileset ? 'photoreal' : null,
+    recoveryId: googleTileset
+      ? 'photoreal'
+      : canLoadPhotorealistic
+        ? 'esri-imagery'
+        : null,
     state: { hasCesiumIonToken: hasIon },
     sources: MAP_STACKS.map((descriptor) => {
       const common = {
@@ -40,9 +52,34 @@ export function createDefaultMapSources({
       if (descriptor.kind === 'photoreal')
         return {
           ...common,
-          available: Boolean(googleTileset),
-          unavailableReason: photorealUnavailableReason(hasIon || hasGoogle),
+          available: canLoadPhotorealistic,
+          unavailableReason: photorealUnavailableReason(
+            hasIon || hasGoogle || Boolean(googleTokens),
+          ),
           tileset: googleTileset,
+          ...(!googleTileset && lazyPhotorealistic && canLoadPhotorealistic
+            ? {
+                async createTileset({ signal } = {}) {
+                  signal?.throwIfAborted();
+                  const result = await loadPhotorealisticTileset(Cesium, {
+                    googleApiKey,
+                    googleTokens,
+                    cesiumToken,
+                  });
+                  if (signal?.aborted) {
+                    result.tileset?.destroy?.();
+                    signal.throwIfAborted();
+                  }
+                  if (!result.tileset)
+                    throw (
+                      result.errors.at(-1) ||
+                      new Error('Google 3D tiles are unavailable')
+                    );
+                  result.tileset.enableCollision = true;
+                  return result.tileset;
+                },
+              }
+            : {}),
         };
       const imagery =
         descriptor.kind === 'ion'

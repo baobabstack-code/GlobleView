@@ -12,29 +12,41 @@ export function startApplicationChrome({
   let disposed = false;
   let firstRun;
   let revealTimer;
-  let resolveDelay;
-  const minimumDelay = new Promise((resolve) => {
-    resolveDelay = resolve;
-  });
-  const delayTimer = setTimeout(resolveDelay, 1000);
+  let startupCoverDismissed = false;
+  let restoreSettled = false;
   const revealFirstRun = () => {
-    if (disposed || signal.aborted || firstRun) return;
+    if (
+      disposed ||
+      signal.aborted ||
+      firstRun ||
+      !startupCoverDismissed ||
+      !restoreSettled
+    )
+      return;
     firstRun = initializeWelcome?.({ styleManager, dataManager });
     clearTimeout(revealTimer);
-    loadingScreen.removeEventListener('transitionend', revealFirstRun);
   };
-  void Promise.all([styleManager.initialRestorePromise, minimumDelay])
+  const onStartupCoverTransition = () => {
+    startupCoverDismissed = true;
+    revealFirstRun();
+  };
+  const hideStartupCover = () => {
+    if (disposed || signal.aborted) return;
+    loadingScreen.classList.add('hidden');
+    loadingScreen.addEventListener('transitionend', onStartupCoverTransition, {
+      once: true,
+    });
+    revealTimer = setTimeout(onStartupCoverTransition, 900);
+  };
+  void Promise.resolve(styleManager.initialRestorePromise)
     .catch(() => {
       /* Restoration reports its own outcome through the controls. */
     })
     .then(() => {
-      if (disposed || signal.aborted) return;
-      loadingScreen.classList.add('hidden');
-      loadingScreen.addEventListener('transitionend', revealFirstRun, {
-        once: true,
-      });
-      revealTimer = setTimeout(revealFirstRun, 900);
+      restoreSettled = true;
+      revealFirstRun();
     });
+  queueMicrotask(hideStartupCover);
   const keySetup = Promise.resolve(
     signal.aborted ? null : initializeSettings?.({ signal }),
   );
@@ -44,10 +56,11 @@ export function startApplicationChrome({
   );
   return async () => {
     disposed = true;
-    clearTimeout(delayTimer);
     clearTimeout(revealTimer);
-    resolveDelay();
-    loadingScreen.removeEventListener('transitionend', revealFirstRun);
+    loadingScreen.removeEventListener(
+      'transitionend',
+      onStartupCoverTransition,
+    );
     firstRun?.destroy();
     (await keySetup.catch(() => null))?.destroy();
   };

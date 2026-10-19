@@ -1,8 +1,36 @@
 import { requireFeatureSource } from '../sources/featureSource.js';
 import { createOverpassFeatureSource } from '../sources/overpassFeatures.js';
 import { createSurfaceServices } from './surfaceServices.js';
-import { createAnnotationResolver } from '../annotations/resolver.js';
 import { searchAndFlyTo } from '../locations.js';
+
+function createLazyAnnotationResolver(options) {
+  let pending = null;
+  const ensure = () => {
+    if (options.signal?.aborted)
+      return Promise.reject(
+        options.signal.reason ||
+          new DOMException('Application was stopped', 'AbortError'),
+      );
+    if (pending) return pending;
+    pending = import('../annotations/resolver.js')
+      .then(({ createAnnotationResolver }) => createAnnotationResolver(options))
+      .catch((error) => {
+        pending = null;
+        throw error;
+      });
+    return pending;
+  };
+  const call =
+    (name) =>
+    (...args) =>
+      ensure().then((resolver) => resolver[name](...args));
+  return Object.freeze({
+    ready: ensure,
+    placesNearViewRecovery: call('placesNearViewRecovery'),
+    resolveAnnotationTarget: call('resolveAnnotationTarget'),
+    resolveRegionRingForQuery: call('resolveRegionRingForQuery'),
+  });
+}
 
 /** Assemble application operations from the caller's request services. */
 export function createApplicationOperations({ requests, signal, eventTarget }) {
@@ -27,7 +55,7 @@ export function createApplicationOperations({ requests, signal, eventTarget }) {
     signal,
     eventTarget,
   });
-  const annotationResolver = createAnnotationResolver({
+  const annotationResolver = createLazyAnnotationResolver({
     featureSource: features,
     signal,
   });

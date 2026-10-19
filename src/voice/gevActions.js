@@ -43,9 +43,15 @@ import {
 import * as defaultFloorServices from '../data/groundFloor.js';
 import { isPickedWorldPosition } from '../data/scenePick.js';
 import { unavailablePlaceSearch } from '../search/placeSearch.js';
-import * as defaultAnnotationResolver from '../annotations/annotationResolver.js';
 import { normalizeRadioCountryInput } from '../data/radioCountry.js';
 import { TR3B_CLASS } from '../data/tr3bRegistry.js';
+
+const defaultAnnotationResolver = {
+  resolveRegionRingForQuery: (...args) =>
+    import('../annotations/annotationResolver.js').then((resolver) =>
+      resolver.resolveRegionRingForQuery(...args),
+    ),
+};
 
 const ALLOWED_STYLES = new Set([
   'normal',

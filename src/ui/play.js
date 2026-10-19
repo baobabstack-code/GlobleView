@@ -8,7 +8,7 @@
  * would otherwise carry the camera's coordinates.
  */
 import * as Cesium from 'cesium';
-import { pickWorldFromScreen } from '../annotations/annotationResolver.js';
+import { pickWorldFromScreen } from '../annotations/annotationView.js';
 import {
   claimPointer,
   pointerOwner,
