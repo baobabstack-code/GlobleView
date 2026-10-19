@@ -1,0 +1,842 @@
+/* Professional console theme: clear labels, quiet surfaces, and a map-first
+   layout. This file is imported last so it can restyle the existing controls
+   without changing their behavior or runtime layout decisions. */
+:root {
+  --bg-dark: #0b1220;
+  --glass-bg: rgba(14, 23, 37, 0.96);
+  --glass-border: rgba(156, 178, 204, 0.2);
+  --glass-border-hover: rgba(111, 177, 239, 0.72);
+  --accent: #83bdf2;
+  --accent-dim: rgba(92, 157, 219, 0.16);
+  --accent-glow: rgba(92, 157, 219, 0.16);
+  --text-primary: #f2f5f9;
+  --text-secondary: #bdc9d8;
+  --text-dim: #91a0b4;
+  --menu-bg: #111b2b;
+  --font-sans: Inter, "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "Cascadia Code", Consolas, "SFMono-Regular", monospace;
+  --panel-radius: 12px;
+  --btn-radius: 8px;
+  --left-stack-x: 24px;
+  --right-rail-x: 24px;
+  --panel-surface-font: var(--font-sans);
+  --panel-surface-title: var(--text-secondary);
+  --panel-surface-width: 304px;
+  --panel-surface-collapsed-width: 52px;
+}
+
+/* Keep the alternate style selector usable while applying the same calm
+   dashboard language to every theme. */
+:root[data-ui-theme='cyber'] {
+  --cyber-red: #6b8cae;
+  --cyber-red-bright: #9ec7ef;
+  --cyber-slate: #1b2a3d;
+  --cyber-slate-raised: #24364c;
+  --cyber-grid: transparent;
+  --cyber-panel-width: 296px;
+  --cyber-right-panel-width: 304px;
+  --cyber-panel-collapsed-width: 52px;
+  --cyber-panel-gap: 10px;
+  --cyber-panel-control-size: 36px;
+  --cyber-panel-surface: rgba(14, 23, 37, 0.97);
+  --cyber-panel-surface-detail: none;
+  --cyber-panel-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+  --cyber-panel-frame: none;
+  --panel-surface-detail: none;
+  --panel-surface-frame: none;
+  --panel-surface-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+  --panel-surface-title: var(--text-secondary);
+  --panel-surface-width: 304px;
+  --panel-surface-collapsed-width: 52px;
+}
+
+body,
+:root[data-ui-theme='cyber'] body {
+  background-color: var(--bg-dark);
+  font-family: var(--font-sans);
+}
+
+:root[data-ui-theme='cyber'] body::after {
+  display: none;
+}
+
+.ui-icon {
+  display: block;
+  width: 1.2em;
+  height: 1.2em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex: 0 0 auto;
+}
+
+#title-bar {
+  top: 22px;
+  left: 24px;
+}
+
+#title-bar .title-glow {
+  display: none;
+}
+
+#title-bar h1,
+:root[data-ui-theme='cyber'] #title-bar h1 {
+  gap: 10px;
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: 0.035em;
+  text-shadow: none;
+}
+
+#title-bar .title-logo,
+:root[data-ui-theme='cyber'] #title-bar .title-logo {
+  width: 36px;
+  filter: none;
+}
+
+#title-bar .subtitle,
+:root[data-ui-theme='cyber'] #title-bar .subtitle {
+  margin-top: 4px;
+  color: var(--text-dim);
+  font-family: var(--font-sans);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+#title-bar .title-accent,
+.loader-content .title-accent {
+  color: var(--accent);
+  font-weight: 650;
+}
+
+#style-indicator {
+  top: 22px;
+  right: 24px;
+  text-shadow: none;
+}
+
+#style-indicator .indicator-label {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  color: var(--text-dim);
+}
+
+#style-indicator .indicator-value {
+  margin-top: 3px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  text-shadow: none;
+}
+
+#top-center-actions {
+  top: 18px;
+  gap: 3px;
+  padding: 4px;
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  background: rgba(14, 23, 37, 0.94);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+#top-center-actions button,
+:root[data-ui-theme='cyber'] #top-center-actions button {
+  width: 38px;
+  height: 38px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  clip-path: none;
+  color: var(--text-secondary);
+  box-shadow: none;
+}
+
+:root[data-ui-theme='cyber'] #top-center-actions button::before {
+  content: none;
+}
+
+#top-center-actions button:hover,
+#top-center-actions button:focus-visible,
+#top-center-actions button[aria-pressed='true'],
+:root[data-ui-theme='cyber'] #top-center-actions button:hover,
+:root[data-ui-theme='cyber'] #top-center-actions button:focus-visible {
+  border-color: var(--glass-border-hover);
+  background: var(--accent-dim);
+  color: var(--text-primary);
+  transform: none;
+  box-shadow: none;
+}
+
+#top-center-actions .ui-icon {
+  width: 18px;
+  height: 18px;
+}
+
+#north-up-view .camera-compass-needle {
+  width: 17px;
+  height: 17px;
+}
+
+.share-icon {
+  display: grid;
+  place-items: center;
+  color: var(--text-secondary);
+}
+
+.share-icon .ui-icon {
+  width: 17px;
+  height: 17px;
+}
+
+#left-panel-stack,
+:root[data-ui-theme='cyber'] #left-panel-stack {
+  left: 24px;
+}
+
+#right-context-rail,
+:root[data-ui-theme='cyber'] #right-context-rail {
+  right: 24px;
+}
+
+#left-panel-stack .data-panel-inner,
+#left-panel-stack .scene-panel-inner,
+#left-panel-stack .cctv-panel-inner,
+#right-context-rail .cctv-panel-inner,
+#right-context-rail .weather-panel-inner,
+#right-context-rail .recent-imagery-panel-inner,
+#right-context-rail .street-level-panel-inner,
+#right-context-rail .global-context-panel-inner,
+:root[data-ui-theme='cyber']
+  :is(
+    .data-panel-inner,
+    .scene-panel-inner,
+    .cctv-panel-inner,
+    .weather-panel-inner,
+    .recent-imagery-panel-inner,
+    .street-level-panel-inner,
+    .global-context-panel-inner,
+    .radio-panel-inner
+  ) {
+  border: 1px solid var(--glass-border);
+  border-radius: var(--panel-radius);
+  background-color: var(--glass-bg);
+  background-image: none;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.32);
+  clip-path: none;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+#left-panel-stack .panel-glow,
+#right-context-rail .panel-glow,
+#command-dock .panel-glow {
+  display: none;
+}
+
+:is(
+    .data-panel-inner,
+    .scene-panel-inner,
+    .cctv-panel-inner,
+    .weather-panel-inner,
+    .recent-imagery-panel-inner,
+    .street-level-panel-inner,
+    .global-context-panel-inner,
+    .radio-panel-inner
+  )
+  > .panel-header {
+  min-height: 36px;
+  padding: 2px 2px 9px;
+  border-bottom: 1px solid rgba(156, 178, 204, 0.15);
+}
+
+:is(
+    .data-panel-inner,
+    .scene-panel-inner,
+    .cctv-panel-inner,
+    .weather-panel-inner,
+    .recent-imagery-panel-inner,
+    .street-level-panel-inner,
+    .global-context-panel-inner,
+    .radio-panel-inner
+  )
+  > .panel-header
+  .panel-title,
+.panel-surface-title {
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.025em;
+  text-shadow: none;
+}
+
+.data-layer-group-heading {
+  color: var(--text-dim);
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+}
+
+.data-toggle-row {
+  padding: 8px 9px 7px;
+  border-radius: 8px;
+}
+
+.data-toggle-row:hover {
+  background: rgba(156, 178, 204, 0.08);
+}
+
+.data-name {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 550;
+  letter-spacing: 0;
+}
+
+.data-count,
+.data-toggle-meta {
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0;
+}
+
+.data-toggle-btn {
+  min-height: 27px;
+  padding: 4px 9px;
+  border-color: rgba(156, 178, 204, 0.19);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.015em;
+}
+
+.data-toggle-btn.active {
+  color: #c6e5ff;
+  border-color: rgba(111, 177, 239, 0.58);
+  background: rgba(92, 157, 219, 0.17);
+  box-shadow: none;
+}
+
+.panel-collapse-btn,
+.panel-drag-handle.compact {
+  border-color: rgba(156, 178, 204, 0.2);
+  border-radius: 6px;
+  color: var(--text-dim);
+  font-family: var(--font-sans);
+}
+
+#left-panel-stack .panel-title,
+#right-context-rail .panel-title,
+#command-dock .panel-title,
+#command-dock .location-toolbar-label {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.045em;
+}
+
+#left-panel-stack > [data-panel-id].collapsed .panel-title,
+#right-context-rail > [data-panel-id].collapsed .panel-title,
+#right-context-rail #global-context-panel.collapsed .panel-title,
+#command-dock #control-panel.collapsed .panel-title,
+#command-dock #location-bar.collapsed .location-toolbar-label {
+  font-size: 10px;
+  letter-spacing: 0.035em;
+}
+
+#command-dock .panel-title::after,
+#command-dock .location-toolbar-label::after {
+  color: var(--text-dim);
+}
+
+.panel-divider,
+#left-panel-stack > [data-panel-id]:not(.collapsed) .panel-divider,
+#right-context-rail [data-panel-id]:not(.collapsed) .panel-divider {
+  background: rgba(156, 178, 204, 0.18);
+  box-shadow: none;
+}
+
+#command-dock,
+:root[data-ui-theme='cyber'] #command-dock {
+  --dock-side-compact: clamp(10rem, 12vw, 11rem);
+  --dock-voice-width: clamp(10rem, 15vw, 12rem);
+  bottom: max(18px, env(safe-area-inset-bottom));
+  gap: 5px;
+  padding: 7px;
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  background: rgba(14, 23, 37, 0.97);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+:root[data-ui-theme='cyber'] #command-dock::before,
+:root[data-ui-theme='cyber'] #command-dock::after {
+  content: none;
+}
+
+#command-dock > #location-bar,
+#command-dock > #control-panel {
+  border-color: rgba(156, 178, 204, 0.13);
+}
+
+#command-dock .panel-title,
+#command-dock .location-toolbar-label,
+#command-dock .gev-voice-kicker {
+  color: var(--text-dim);
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.055em;
+}
+
+#command-dock .btn-label {
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+#command-dock .style-btn {
+  min-height: 40px;
+  border-radius: 8px;
+  clip-path: none;
+}
+
+#command-dock .location-pill,
+#command-dock .poi-pill {
+  min-height: 34px;
+  border-radius: 7px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+}
+
+#command-dock #location-search,
+#command-dock #location-search.expanded {
+  min-height: 36px;
+  border-radius: 7px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+}
+
+#command-dock > #gev-voice-control {
+  border: 1px solid rgba(111, 177, 239, 0.28);
+  border-radius: 10px;
+  background: rgba(28, 47, 70, 0.88);
+  box-shadow: none;
+}
+
+#command-dock #gev-voice-status {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+#command-dock #gev-voice-detail {
+  font-family: var(--font-sans);
+  font-size: 10px;
+}
+
+#global-loading-status,
+#traffic-sync-chip,
+#cctv-sync-chip {
+  color: var(--text-secondary);
+  border-color: var(--glass-border);
+  border-radius: 8px;
+  background: rgba(14, 23, 37, 0.96);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.25);
+  font-family: var(--font-sans);
+  font-size: 10px;
+  letter-spacing: 0.035em;
+}
+
+#global-loading-label,
+#traffic-sync-label,
+#cctv-sync-label {
+  color: var(--text-secondary);
+}
+
+#global-loading-detail,
+#traffic-sync-progress,
+#cctv-sync-progress {
+  color: var(--accent);
+  letter-spacing: 0;
+}
+
+#toast {
+  border-color: var(--glass-border-hover);
+  border-radius: 8px;
+  background: rgba(14, 23, 37, 0.98);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  letter-spacing: 0.025em;
+  text-transform: none;
+}
+
+/* The default telemetry overlay used neon monospace and faux classification
+   copy across the map. Keep useful location and scene data, with quieter
+   typography and compact surfaces that read like a dashboard. */
+#intel-hud {
+  --hud-color: #bdc9d8;
+  --hud-glow: transparent;
+  --hud-border: rgba(156, 178, 204, 0.2);
+}
+
+#intel-hud * {
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  letter-spacing: 0;
+  line-height: 1.45;
+  text-shadow: none;
+  text-transform: none;
+}
+
+#intel-hud .hud-corner {
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid rgba(156, 178, 204, 0.19);
+  border-radius: 10px;
+  background: rgba(14, 23, 37, 0.84);
+}
+
+#intel-hud .hud-bracket {
+  display: none;
+}
+
+#intel-hud .hud-top-left .hud-classification,
+#intel-hud .hud-top-left .hud-system,
+#intel-hud .hud-left-edge,
+#intel-hud .hud-right-edge {
+  display: none;
+}
+
+#intel-hud .hud-content,
+#intel-hud .hud-rec,
+#intel-hud .hud-orbital {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+#intel-hud .hud-mode {
+  margin-top: 0;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+
+#intel-hud .hud-summary-wrap {
+  margin-top: 8px;
+  max-width: min(360px, 36vw);
+}
+
+#intel-hud .hud-summary-label {
+  color: var(--text-dim);
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+}
+
+#intel-hud .hud-summary {
+  max-width: 100%;
+  min-height: 0;
+  margin-top: 3px;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  letter-spacing: 0;
+}
+
+#intel-hud #hud-rec-dot {
+  color: #e07676;
+  text-shadow: none;
+}
+
+#intel-hud .hud-top-bar,
+#intel-hud .hud-bottom-bar {
+  border-color: var(--glass-border);
+  border-radius: 8px;
+  background: rgba(14, 23, 37, 0.88);
+  box-shadow: none;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  letter-spacing: 0;
+}
+
+body:has(#first-run-launcher.visible)::before {
+  background: rgba(5, 10, 18, 0.62);
+}
+
+/* First visit stays non-modal and map interaction stays available. The
+   pointer-transparent scrim simply gives the choice card a quiet stage. */
+body:has(#first-run-launcher.visible)::before {
+  content: '';
+  position: fixed;
+  z-index: 174;
+  inset: 0;
+  background: rgba(5, 10, 18, 0.46);
+  pointer-events: none;
+}
+
+#first-run-launcher {
+  width: min(36rem, calc(100vw - 2rem));
+  padding: 1.45rem;
+  color: var(--text-primary);
+  background: #111c2b;
+  border: 1px solid rgba(156, 178, 204, 0.28);
+  border-radius: 16px;
+  box-shadow: 0 24px 72px rgba(0, 0, 0, 0.54);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.first-run-scanline {
+  display: none;
+}
+
+.first-run-header,
+.first-run-footer {
+  color: var(--text-dim);
+  font-family: var(--font-sans);
+  font-size: 10px;
+  letter-spacing: 0.07em;
+}
+
+.first-run-kicker {
+  color: #9bb9d6;
+  font-weight: 650;
+}
+
+#first-run-launcher h2 {
+  margin-top: 0.8rem;
+  font-family: var(--font-sans);
+  font-size: clamp(1.55rem, 3vw, 1.9rem);
+  font-weight: 650;
+  letter-spacing: -0.025em;
+}
+
+#first-run-description {
+  max-width: 31rem;
+  margin-top: 0.45rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.first-run-choices {
+  gap: 0.55rem;
+  margin-top: 1.15rem;
+  scrollbar-color: rgba(156, 178, 204, 0.35) transparent;
+}
+
+.first-run-choices::-webkit-scrollbar-thumb {
+  background: rgba(156, 178, 204, 0.35);
+}
+
+.first-run-choices button {
+  grid-template-columns: 2.35rem minmax(0, 1fr) 1.4rem;
+  gap: 0.8rem;
+  min-height: 4.25rem;
+  padding: 0.72rem 0.9rem;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(156, 178, 204, 0.19);
+  border-radius: 10px;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.first-run-choices button:hover,
+.first-run-choices button:focus-visible {
+  background: rgba(92, 157, 219, 0.11);
+  border-color: rgba(111, 177, 239, 0.58);
+  transform: translateY(-1px);
+}
+
+.first-run-choices button > .ui-icon:first-child {
+  width: 22px;
+  height: 22px;
+  justify-self: center;
+  color: var(--accent);
+}
+
+.first-run-choices strong {
+  display: block;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.025em;
+}
+
+.first-run-choices small {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-dim);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.first-run-choices .first-run-arrow {
+  width: 16px;
+  height: 16px;
+  justify-self: end;
+  color: var(--text-dim);
+  transition: transform var(--transition-fast), color var(--transition-fast);
+}
+
+.first-run-choices button:hover .first-run-arrow,
+.first-run-choices button:focus-visible .first-run-arrow {
+  color: var(--text-primary);
+  transform: translateX(2px);
+}
+
+.first-run-footer {
+  margin-top: 0.95rem;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+.first-run-suppress {
+  gap: 0.5rem;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 11px;
+}
+
+.first-run-suppress input {
+  accent-color: #6faee8;
+}
+
+.first-run-note {
+  margin-top: 0.65rem;
+  color: var(--text-dim);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+#cesium-credits {
+  color: rgba(226, 233, 242, 0.72);
+  font-family: var(--font-sans);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+#cesium-credits a,
+#cesium-credits .cesium-credit-expand-link {
+  color: rgba(226, 233, 242, 0.84);
+}
+
+#key-setup-chip {
+  gap: 0.5rem;
+  padding: 0.55rem 0.8rem;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.045em;
+  background: rgba(14, 23, 37, 0.96);
+  border-color: var(--glass-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.26);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+#key-setup-chip .ui-icon {
+  width: 15px;
+  height: 15px;
+  color: var(--accent);
+}
+
+#key-setup-chip:hover,
+#key-setup-chip:focus-visible {
+  background: #17253a;
+  border-color: var(--glass-border-hover);
+  transform: none;
+}
+
+@media (max-width: 720px) {
+  #title-bar {
+    top: 14px;
+    left: 14px;
+  }
+
+  #title-bar h1,
+  :root[data-ui-theme='cyber'] #title-bar h1 {
+    gap: 7px;
+    font-size: 15px;
+  }
+
+  #title-bar .title-logo,
+  :root[data-ui-theme='cyber'] #title-bar .title-logo {
+    width: 30px;
+  }
+
+  #style-indicator {
+    top: 14px;
+    right: 14px;
+  }
+
+  #top-center-actions {
+    top: 58px;
+  }
+
+  #left-panel-stack,
+  :root[data-ui-theme='cyber'] #left-panel-stack {
+    left: 12px;
+  }
+
+  #right-context-rail,
+  :root[data-ui-theme='cyber'] #right-context-rail {
+    right: 12px;
+  }
+
+  #command-dock,
+  :root[data-ui-theme='cyber'] #command-dock {
+    bottom: max(10px, env(safe-area-inset-bottom));
+    max-width: calc(100vw - 20px);
+    padding: 6px;
+  }
+
+  #command-dock .btn-label {
+    font-size: 9px;
+  }
+
+  #first-run-launcher {
+    padding: 1rem;
+  }
+
+  .first-run-choices button {
+    min-height: 3.9rem;
+    padding: 0.62rem 0.7rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .first-run-choices .first-run-arrow {
+    transition: none;
+  }
+}
