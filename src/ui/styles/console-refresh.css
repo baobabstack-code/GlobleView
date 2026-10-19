@@ -361,6 +361,147 @@ body,
   color: var(--text-dim);
 }
 
+#pp-toggles:not(.collapsed) {
+  border-color: var(--glass-border);
+  border-radius: var(--panel-radius);
+  background: var(--glass-bg);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+#pp-toggles .pp-header-row {
+  border-color: var(--glass-border);
+  border-radius: 10px;
+  background: var(--glass-bg);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.24);
+}
+
+#pp-toggles .pp-header-label {
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.045em;
+}
+
+#pp-toggles .pp-toggle-btn {
+  min-height: 40px;
+  border-color: rgba(156, 178, 204, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.025);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+#pp-toggles .pp-toggle-btn:hover,
+#pp-toggles .pp-toggle-btn:focus-visible {
+  border-color: var(--glass-border-hover);
+  background: rgba(92, 157, 219, 0.1);
+}
+
+#pp-toggles .pp-toggle-btn.active {
+  border-color: rgba(111, 177, 239, 0.56);
+  background: rgba(92, 157, 219, 0.16);
+  box-shadow: none;
+}
+
+#pp-toggles .pp-label {
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.035em;
+}
+
+#pp-toggles .pp-toggle-btn.active .pp-label,
+#pp-toggles .pp-icon {
+  color: var(--accent);
+}
+
+#pp-toggles .pp-icon.ui-icon {
+  width: 15px;
+  height: 15px;
+}
+
+#detection-toggle.active,
+#detection-toggle.panoptic,
+#detection-toggle.god {
+  border-color: rgba(111, 177, 239, 0.64);
+  background: rgba(92, 157, 219, 0.18);
+  box-shadow: none;
+  animation: none;
+}
+
+#detection-toggle.active .pp-label,
+#detection-toggle.active .pp-icon,
+#detection-toggle.panoptic .pp-label,
+#detection-toggle.panoptic .pp-icon,
+#detection-toggle.god .pp-label,
+#detection-toggle.god .pp-icon {
+  color: #c6e5ff;
+  text-shadow: none;
+}
+
+#pp-toggles .pp-slider-row {
+  border-color: rgba(156, 178, 204, 0.16);
+  background: rgba(10, 17, 28, 0.52);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+#pp-toggles .pp-slider-mini-label,
+#pp-toggles .pp-slider-value {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  letter-spacing: 0.015em;
+}
+
+#pp-toggles .pp-slider-mini-label {
+  color: var(--text-dim);
+  text-transform: none;
+}
+
+#pp-toggles .pp-slider-value {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+#pp-toggles .pp-slider {
+  height: 4px;
+  background: rgba(156, 178, 204, 0.2);
+}
+
+#pp-toggles .pp-slider::-webkit-slider-thumb {
+  width: 12px;
+  height: 12px;
+  box-shadow: none;
+}
+
+#pp-toggles .pp-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  box-shadow: none;
+}
+
+#pp-toggles .pp-mode-btn {
+  min-height: 30px;
+  border-color: rgba(156, 178, 204, 0.18);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.025);
+  font-family: var(--font-sans);
+  font-size: 10px;
+  letter-spacing: 0.015em;
+}
+
+#pp-toggles .pp-mode-btn.active {
+  border-color: rgba(111, 177, 239, 0.54);
+  color: var(--text-primary);
+  background: rgba(92, 157, 219, 0.2);
+}
+
 .panel-divider,
 #left-panel-stack > [data-panel-id]:not(.collapsed) .panel-divider,
 #right-context-rail [data-panel-id]:not(.collapsed) .panel-divider {
@@ -582,10 +723,6 @@ body,
   letter-spacing: 0;
 }
 
-body:has(#first-run-launcher.visible)::before {
-  background: rgba(5, 10, 18, 0.62);
-}
-
 /* First visit stays non-modal and map interaction stays available. The
    pointer-transparent scrim simply gives the choice card a quiet stage. */
 body:has(#first-run-launcher.visible)::before {
@@ -593,7 +730,7 @@ body:has(#first-run-launcher.visible)::before {
   position: fixed;
   z-index: 174;
   inset: 0;
-  background: rgba(5, 10, 18, 0.46);
+  background: rgba(5, 10, 18, 0.58);
   pointer-events: none;
 }
 
