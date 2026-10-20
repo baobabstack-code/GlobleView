@@ -27,9 +27,11 @@ export const APPLICATION_LAYER_METADATA = Object.freeze([
 ]);
 
 const LAYER_ORDER = Object.freeze([
+  'air-quality',
   'bhote-koshi-2026',
   'bhote-koshi-locator',
   'flights',
+  'gnss-integrity',
   'military',
   'local-adsb',
   'earthquakes',
@@ -61,6 +63,13 @@ const LAYER_ORDER = Object.freeze([
 
 const LAZY_LAYER_METADATA = Object.freeze([
   {
+    id: 'air-quality',
+    name: 'Air quality',
+    icon: '\u25cd',
+    source: 'ECCC MSC GeoMet',
+    updateInterval: 1_200_000,
+  },
+  {
     id: 'bhote-koshi-2026',
     name: 'Bhote Koshi Flood',
     icon: '🌊',
@@ -82,6 +91,13 @@ const LAZY_LAYER_METADATA = Object.freeze([
     icon: '✈️',
     source: 'Flights',
     updateInterval: 30_000,
+  },
+  {
+    id: 'gnss-integrity',
+    name: 'GNSS Integrity',
+    icon: '\u{1F4E1}',
+    source: 'adsb.lol',
+    updateInterval: 60_000,
   },
   {
     id: 'military',
@@ -331,6 +347,14 @@ export function createApplicationCatalog({
 
     const definitions = [
       {
+        metadata: LAZY_LAYER_METADATA.find(({ id }) => id === 'air-quality'),
+        supportsRowControls: true,
+        load: async () =>
+          (
+            await import('./layers/airQuality.js')
+          ).createApplicationAirQuality({ source: sources['air-quality'] }),
+      },
+      {
         metadata: LAZY_LAYER_METADATA.find(
           ({ id }) => id === 'bhote-koshi-2026',
         ),
@@ -363,6 +387,18 @@ export function createApplicationCatalog({
             resolveAsset,
           });
         },
+      },
+      {
+        metadata: LAZY_LAYER_METADATA.find(
+          ({ id }) => id === 'gnss-integrity',
+        ),
+        supportsRowControls: true,
+        load: async () =>
+          (
+            await import('./layers/gnss.js')
+          ).createApplicationGnssIntegrity({
+            source: sources['gnss-integrity'],
+          }),
       },
       {
         metadata: LAZY_LAYER_METADATA.find(({ id }) => id === 'military'),
